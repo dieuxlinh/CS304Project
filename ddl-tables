@@ -1,28 +1,28 @@
-drop table if exists user;
-drop table if exists media;
 drop table if exists friends;
 drop table if exists currents;
 drop table if exists reviews;
+drop table if exists users;
+drop table if exists media;
 
 create table users (
     user_id int auto_increment,
     username varchar(20),
     email varchar(50),
-    password_hash varchar,
-    profile_pic varchar,
+    password_hash varchar(255),
+    profile_pic varchar(255),
     primary key (user_id)
 );
 
 create table friends (
     user_id int not null,
     friend_id int not null,
-    primary key (user_id, friend_id)
+    primary key (user_id, friend_id),
 
-    --ref integ
-    index(user_id)
-    foreign key (user_id) references user(user_id)
+    
+    index(user_id),
+    foreign key (user_id) references users(user_id)
         on update restrict
-        on delete restrict
+        on delete cascade
 );
 
 create table media(
@@ -42,14 +42,13 @@ create table currents(
     progress varchar(50),
     primary key(current_id),
 
-    --ref integ
-    index(user_id, media_id)
-    foreign key (user_id) references user(user_id)
+    index(user_id, media_id),
+    foreign key (user_id) references users(user_id)
         on update restrict
-        on delete restrict
+        on delete cascade,
      foreign key (media_id) references media(media_id)
         on update restrict
-        on delete restrict
+        on delete cascade
 );
 
 create table reviews(
@@ -60,12 +59,10 @@ create table reviews(
     rating int,
     primary key(review_id),
 
-    --ref integ
-    foreign key (user_id) references user(user_id)
+    foreign key (user_id) references users(user_id)
         on update restrict
-        on delete restrict
+        on delete cascade,
      foreign key (media_id) references media(media_id)
         on update restrict
-        on delete restrict
-    
+        on delete cascade
 );
