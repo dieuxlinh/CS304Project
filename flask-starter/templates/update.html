@@ -1,27 +1,27 @@
 {% extends "base.html" %}
 
 {% block main_content %}
-<h1>Update Movie </h1>
+<h1>Update Media </h1>
 
-<form action="{{ url_for('update_movie', tt=movie['tt']) }}" method="post">
+<form action="{{ url_for('update_media', media_id=media['media_id']) }}" method="post">
     
     <label for="title">Title:</label>
-    <input type="text" name="title" id="title" value="{{ movie['title'] }}"><br><br>
+    <input type="text" name="title" id="title" value="{{ media['title'] }}"><br><br>
 
-    <label for="movie-id">Movie ID:</label>
-    <input type="text" id="movie-id" value="{{ movie['tt'] }}"><br><br>
+    <label for="movie_id">Media ID:</label>
+    <input type="text" id="media_id" value="{{ media['media_id'] }}"><br><br>
         
-    <label for="release">Release Year:</label>
-    <input type="number" name="release" id="release" value="{{ movie['release'] }}"><br><br>
+    <label for="media_type">Media Type:</label>
+    <input type="enum" name="media_type" id="media_type" value="{{ media['media_type'] }}"><br><br>
 
-    <label for="added-by">Added By:</label>
-    <input type="text" id="added-by" value="{{ movie['addedby'] }}"><br><br>
+    <label for="director">Director:</label>
+    <input type="text" name="director" id="director" value="{{ media['director'] or '' }}"><br><br>
 
-    <label for="director">Director ID:</label>
-    <input type="text" name="director" id="director" value="{{ movie['director'] or '' }}"><br><br>
-    
-    <label for="director-name">Director:</label>
-    <input type="text" id="director-name" value="{{ movie['director_name'] if movie['director'] else 'None Specified' }}" disabled><br><br>
+    <label for="artist">Artist:</label>
+    <input type="text" name="artist" id="artist" value="{{ media['artist'] or '' }}"><br><br>
+
+    <label for="author">Author:</label>
+    <input type="text" name="author" id="author" value="{{ media['author'] or '' }}"><br><br>
 
     <button type="submit">Update</button>
 </form>
