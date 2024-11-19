@@ -22,7 +22,7 @@ app.config['TRAP_BAD_REQUEST_ERRORS'] = True
 @app.route('/')
 def index():
     return render_template('main.html',
-                           page_title='Main Page')
+                           page_title='Home')
 
 # You will probably not need the routes below, but they are here
 # just in case. Please delete them if you are not using them
@@ -36,22 +36,30 @@ def login():
                                page_title='Login')
     else:
         try:
-            # throws error if there's trouble
             username = request.form['username']
             password = request.form['pass'] 
+            if username == "":
+                flash("Please enter a username")
+            if password == "":
+                flash("Please enter a password")
+            if username == "" or password == "":
+                return render_template('login.html',
+                               page_title='Login')
             
             sql = "select user_id, password_hash from users where username = %s"
             curs.execute(sql, username)
             result = curs.fetchone()
+
             if result is None:
                 flash('Incorrect login')
                 return render_template('login.html',
                                page_title='Login')
+            
             stored = result['password_hash']
 
             hashed2 = bcrypt.hashpw(password.encode('utf-8'), stored.encode('utf-8'))
             hashed2_str = hashed2.decode('utf-8')
-            #add in incorrect username handling
+
             if(hashed2_str != stored):
                 flash('Incorrect password')
                 return render_template('login.html',
@@ -63,17 +71,10 @@ def login():
                 session['logged_in'] = True
                 session['visits'] = 1
                 return redirect(url_for('profile', username=username))
-            
-            #redirect to profile upon login
-            
 
         except Exception as err:
             flash('form submission error'+str(err))
-            return redirect( url_for('index') )
-
-# This route displays all the data from the submitted form onto the rendered page
-# It's unlikely you will ever need anything like this in your own applications, so
-# you should probably delete this handler
+            return redirect(url_for('login') )
 
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
@@ -93,13 +94,8 @@ def profile(username):
         reviewsResult = curs.fetchall()
 
         return render_template('profile.html',
-                               page_title='Profile Page',
+                               page_title='Profile',
                                username=username, currentsResult=currentsResult, friendsResult=friendsResult, reviewsResult = reviewsResult)
-    elif request.method == 'POST':
-        return render_template('form_data.html',
-                               page_title='Display of Form Data',
-                               method=request.method,
-                               form_data=request.form)
     else:
         raise Exception('this cannot happen')
 
@@ -123,6 +119,17 @@ def newAcc():
             email = request.form['email']
             username = request.form['username']
             password = request.form['pass'] 
+            
+            if email == "":
+                flash("Please enter an email")
+            if username == "":
+                flash("Please enter a username")
+            if password == "":
+                flash("Please enter a password")
+            if email == "" or username == "" or password == "":
+                return render_template('createAccount.html',
+                               page_title='Create Account')
+            
             sql = "select * from users where email = %s"
             curs.execute(sql, email)
             result = curs.fetchone()
@@ -148,6 +155,7 @@ def newAcc():
             sql = 'select user_id from users where username = %s'
             curs.execute(sql, username)
             result = curs.fetchone()
+            
             session['uid'] = result['user_id']
             session['logged_in'] = True
             session['visits'] = 1
@@ -174,15 +182,32 @@ def insert_media():
             'artist': '',
             'author': ''
         }
-        return render_template('insert.html', media=media)
+        return render_template('insert.html', media=media, page_title='Insert Media')
 
     elif request.method == 'POST':
-        # Form data
+        # Why are we asking for media id?
         title = request.form['title']
         media_type = request.form['media_type']
         director = request.form['director']
         artist = request.form['artist']
         author = request.form['author']
+        if title == "":
+                flash("Please enter a title")
+        if media_type == "":
+            flash("Please enter a media type")
+        if director == "" and artist == "" and author == "":
+            flash("Please enter a director/artist/author")
+        if title == "" or media_type == "" or (director == "" and artist == "" and author == ""):
+            media = {
+            'media_id': '',
+            'title': '',
+            'media_type': '',
+            'director': '',
+            'artist': '',
+            'author': ''
+            }
+            return render_template('insert.html', media=media,
+                               page_title='Insert Media')
 
         try:
             sql = """
@@ -214,8 +239,7 @@ def update_media(media_id):
         if not media:
             flash('Media not found')
             return redirect(url_for('index'))
-
-        return render_template('update.html', media=media)
+        return render_template('update.html', media=media, page_title='Update Media')
 
     elif request.method == 'POST':
         # Form data
