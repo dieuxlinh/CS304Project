@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Welcome {{name}}</h1>
+
+<form method="POST" action= "{{ url_for('newAcc') }}" >
+    <p>Please enter your <label for="email">
+        email: <input type="text" name="email">
+    </label></p>
+    <p>Please enter a <label for="username">
+            username: <input type="text" name="username">
+    </label></p>
+    <p>Please enter a <label for ="pass">password: <input type = "text" name="pass"></label></p>
+    <input type="submit" name="submit" value="Create Account">
+</form>
+
+{% endblock %}

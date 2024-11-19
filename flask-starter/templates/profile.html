@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+    <h1>Welcome {{username}}</h1>
+    <p>Currents:</p>
+    {% for curr in currentsResult %}
+        <li>{{curr['title']}}</li>
+    {% endfor %}
+ 
+    <p>Friends:</p>
+    {% for friend in friendsResult %}
+        <li>{{friend['username']}}</li>
+    {% endfor %}
+ 
+    <p>Reviews:</p>
+    {% for review in reviewsResult %}
+        <li>{{review['title']}} {{review['rating']}}</li>
+        <p>{{review['review_text']}}</p>
+    {% endfor %}
+
+
+{% endblock %}

@@ -5,7 +5,7 @@
     <!-- for mobile-friendly pages -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name=author content="Linh, Ariel, Sophie">
-    <title>Home - CS304 Project</title>
+    <title>{{page_title}}</title>
     <link rel='stylesheet' href="{{url_for('static', filename = 'style.css')}}">
     {% block head_stuff %} {% endblock %}
 </head>
@@ -21,24 +21,24 @@
   {% endif %}
   {% endwith %}
   
-  {% block nav %}
-  <nav>
-    <ul>
-      <li><a href="{{ url_for('index') }}">Home</a></li>
-      <li><a href="{{ url_for('insert') }}">Insert a Movie</a></li>
-      <li><a href="{{ url_for('select') }}">Incomplete Movies</a></li>
-    </ul>
-  </nav>
-  {% endblock %}
-  
-  <div id="content">
-    {% block main_content %}
-    <h1>Movie Database</h1>
-    {% endblock %}
-  </div>
-  
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  {% block end_scripts %}
+  {% if session['logged_in'] %}
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('profile', username=session['username']) }}">Profile</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      </ul>
+    </nav>
+  {% else %}
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+      </ul>
+    </nav>  
+  {% endif %}
+
+  {% block main_content %}
   {% endblock %}
     
   </body>
