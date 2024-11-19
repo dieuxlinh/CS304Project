@@ -94,7 +94,7 @@ def profile(username):
         reviewsResult = curs.fetchall()
 
         return render_template('profile.html',
-                               page_title='My Profile',
+                               page_title='Profile',
                                username=username, currentsResult=currentsResult, friendsResult=friendsResult, reviewsResult = reviewsResult)
     else:
         raise Exception('this cannot happen')
