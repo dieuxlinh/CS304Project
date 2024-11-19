@@ -3,7 +3,7 @@
 {% block main_content %}
 <h1>Welcome {{name}}</h1>
 
-<form method="post" action="">
+<form method="POST" action= "{{ url_for('newAcc') }}" >
     <p>Please enter your <label for="email">
         email: <input type="text" name="email">
     </label></p>

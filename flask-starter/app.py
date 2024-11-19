@@ -29,21 +29,43 @@ def index():
 
 @app.route('/login/', methods=["GET", "POST"])
 def login():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
         return render_template('login.html',
-                               page_title='Login form')
+                               page_title='Login')
     else:
         try:
             # throws error if there's trouble
             username = request.form['username']
             password = request.form['pass'] 
-            pass1 = password
-            hashed = bcrypt.hashpw(pass1.encode('utf-8'), bcrypt.gensalt())
-            stored = hashed.decode('utf-8')
             
-            flash('form submission successful')
+            sql = "select user_id, password_hash from users where username = %s"
+            curs.execute(sql, username)
+            result = curs.fetchone()
+            if result is None:
+                flash('Incorrect login')
+                return render_template('login.html',
+                               page_title='Login')
+            stored = result['password_hash']
+
+            hashed2 = bcrypt.hashpw(password.encode('utf-8'), stored.encode('utf-8'))
+            hashed2_str = hashed2.decode('utf-8')
+            #add in incorrect username handling
+            if(hashed2_str != stored):
+                flash('Incorrect password')
+                return render_template('login.html',
+                               page_title='Login')
+            else:
+                flash('successfully logged in as ' + username)
+                session['username'] = username
+                session['uid'] = result['user_id']
+                session['logged_in'] = True
+                session['visits'] = 1
+                return redirect(url_for('profile', username=username))
+            
             #redirect to profile upon login
-            return render_template('profile.html')
+            
 
         except Exception as err:
             flash('form submission error'+str(err))
@@ -53,13 +75,26 @@ def login():
 # It's unlikely you will ever need anything like this in your own applications, so
 # you should probably delete this handler
 
-@app.route('/profile/', methods=['GET','POST'])
-def profile():
+@app.route('/profile/<username>', methods=['GET','POST'])
+def profile(username):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
-        return render_template('form_data.html',
-                               page_title='Display of Form Data',
-                               method=request.method,
-                               form_data=request.args)
+        sql = 'select media.title from currents inner join media using (media_id) where currents.user_id = %s'
+        curs.execute(sql, session['uid'])
+        currentsResult = curs.fetchall()
+        
+        sql = 'select users.username from users inner join friends on friends.friend_id = users.user_id where friends.user_id = %s'
+        curs.execute(sql, session['uid'])
+        friendsResult = curs.fetchall()
+
+        sql = 'select media.title, reviews.rating, reviews.review_text from media inner join reviews using (media_id) where reviews.user_id = %s'
+        curs.execute(sql, session['uid'])
+        reviewsResult = curs.fetchall()
+
+        return render_template('profile.html',
+                               page_title='Profile Page',
+                               username=username, currentsResult=currentsResult, friendsResult=friendsResult, reviewsResult = reviewsResult)
     elif request.method == 'POST':
         return render_template('form_data.html',
                                page_title='Display of Form Data',
@@ -68,9 +103,15 @@ def profile():
     else:
         raise Exception('this cannot happen')
 
-# This route shows how to render a page with a form on it.
+@app.route('/logout/')
+def logout():
+    session.pop('username')
+    session.pop('uid')
+    session.pop('logged_in')
+    flash('You are logged out')
+    return redirect(url_for('index'))
 
-@app.route('/CreateAccount/')
+@app.route('/CreateAccount/', methods=['GET','POST'])
 def newAcc():
     conn = dbi.connect()
     curs = dbi.dict_cursor(conn)
@@ -79,18 +120,40 @@ def newAcc():
                                page_title='Create Account')
     else:
         try:
-            # throws error if there's trouble
             email = request.form['email']
             username = request.form['username']
             password = request.form['pass'] 
             sql = "select * from users where email = %s"
-
-            pass1 = password
-            hashed = bcrypt.hashpw(pass1.encode('utf-8'), bcrypt.gensalt())
+            curs.execute(sql, email)
+            result = curs.fetchone()
+            if result:
+                flash("Email already associated with an account")
+                return redirect (url_for('login'))
+            
+            sql = "select * from users where username = %s"
+            curs.execute(sql, username)
+            result = curs.fetchone()
+            if result:
+                flash("Username already in use")
+                return render_template('createAccount.html',
+                               page_title='Create Account')
+            
+            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             stored = hashed.decode('utf-8')
-            flash('form submission successful')
-            #redirect to profile upon login
-            return render_template('profile.html')
+            sql = 'insert into users (username, email, password_hash) values (%s,%s,%s)'
+            curs.execute(sql, [username, email, stored])
+            conn.commit()
+            session['username'] = username
+
+            sql = 'select user_id from users where username = %s'
+            curs.execute(sql, username)
+            result = curs.fetchone()
+            session['uid'] = result['user_id']
+            session['logged_in'] = True
+            session['visits'] = 1
+            flash('Account created successfully')
+            
+            return redirect(url_for('profile', username=username))
 
         except Exception as err:
             flash('form submission error'+str(err))
@@ -106,7 +169,7 @@ if __name__ == '__main__':
     else:
         port = os.getuid()
     # set this local variable to 'wmdb' or your personal or team db
-    db_to_use = 'put_database_name_here_db' 
+    db_to_use = 'st107_db' 
     print(f'will connect to {db_to_use}')
     dbi.conf(db_to_use)
     app.debug = True
