@@ -167,6 +167,87 @@ def newAcc():
             flash('form submission error'+str(err))
             return redirect( url_for('index') )
 
+@app.route('/insert_media/', methods=["GET", "POST"])
+def insert_media():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+
+    if request.method == 'GET':
+        # Pass empty values or defaults to the template
+        media = {
+            'media_id': '',
+            'title': '',
+            'media_type': '',
+            'director': '',
+            'artist': '',
+            'author': ''
+        }
+        return render_template('insert.html', media=media)
+
+    elif request.method == 'POST':
+        # Form data
+        title = request.form['title']
+        media_type = request.form['media_type']
+        director = request.form['director']
+        artist = request.form['artist']
+        author = request.form['author']
+
+        try:
+            sql = """
+                INSERT INTO media (title, media_type, director, artist, author)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            curs.execute(sql, (title, media_type, director, artist, author))
+            conn.commit()
+
+            flash('Media successfully inserted')
+            return redirect(url_for('index'))
+
+        except Exception as err:
+            flash(f"Error inserting media: {str(err)}")
+            return redirect(url_for('index'))
+
+
+@app.route('/update_media/<int:media_id>/', methods=["GET", "POST"])
+def update_media(media_id):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+
+    if request.method == 'GET':
+        # Current media data
+        sql = 'SELECT * FROM media WHERE media_id = %s'
+        curs.execute(sql, (media_id,))
+        media = curs.fetchone()
+
+        if not media:
+            flash('Media not found')
+            return redirect(url_for('index'))
+
+        return render_template('update.html', media=media)
+
+    elif request.method == 'POST':
+        # Form data
+        title = request.form['title']
+        media_type = request.form['media_type']
+        director = request.form['director']
+        artist = request.form['artist']
+        author = request.form['author']
+
+        try:
+            sql = """
+                UPDATE media
+                SET title = %s, media_type = %s, director = %s, artist = %s, author = %s
+                WHERE media_id = %s
+            """
+            curs.execute(sql, (title, media_type, director, artist, author, media_id))
+            conn.commit()
+
+            flash('Media successfully updated')
+            return redirect(url_for('index'))
+
+        except Exception as err:
+            flash(f"Error updating media: {str(err)}")
+            return redirect(url_for('index'))
 
 if __name__ == '__main__':
     import sys, os
