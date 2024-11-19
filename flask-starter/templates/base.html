@@ -25,20 +25,13 @@
   <nav>
     <ul>
       <li><a href="{{ url_for('index') }}">Home</a></li>
-      <li><a href="{{ url_for('insert') }}">Insert a Movie</a></li>
-      <li><a href="{{ url_for('select') }}">Incomplete Movies</a></li>
+      <li><a href="{{ url_for('login') }}">Login</a></li>
+      <li><a href="{{ url_for('profile') }}">Profile</a></li>
     </ul>
   </nav>
   {% endblock %}
-  
-  <div id="content">
-    {% block main_content %}
-    <h1>Movie Database</h1>
-    {% endblock %}
-  </div>
-  
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  {% block end_scripts %}
+
+  {% block main_content %}
   {% endblock %}
     
   </body>

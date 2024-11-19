@@ -10,6 +10,7 @@ import cs304dbi as dbi
 # import cs304dbi_sqlite3 as dbi
 
 import secrets
+import bcrypt
 
 app.secret_key = 'your secret here'
 # replace that with a random key
@@ -26,18 +27,23 @@ def index():
 # You will probably not need the routes below, but they are here
 # just in case. Please delete them if you are not using them
 
-@app.route('/greet/', methods=["GET", "POST"])
-def greet():
+@app.route('/login/', methods=["GET", "POST"])
+def login():
     if request.method == 'GET':
-        return render_template('greet.html',
-                               page_title='Form to collect username')
+        return render_template('login.html',
+                               page_title='Login form')
     else:
         try:
-            username = request.form['username'] # throws error if there's trouble
+            # throws error if there's trouble
+            username = request.form['username']
+            password = request.form['pass'] 
+            pass1 = password
+            hashed = bcrypt.hashpw(pass1.encode('utf-8'), bcrypt.gensalt())
+            stored = hashed.decode('utf-8')
+            
             flash('form submission successful')
-            return render_template('greet.html',
-                                   page_title='Welcome '+username,
-                                   name=username)
+            #redirect to profile upon login
+            return render_template('profile.html')
 
         except Exception as err:
             flash('form submission error'+str(err))
@@ -47,8 +53,8 @@ def greet():
 # It's unlikely you will ever need anything like this in your own applications, so
 # you should probably delete this handler
 
-@app.route('/formecho/', methods=['GET','POST'])
-def formecho():
+@app.route('/profile/', methods=['GET','POST'])
+def profile():
     if request.method == 'GET':
         return render_template('form_data.html',
                                page_title='Display of Form Data',
@@ -64,11 +70,31 @@ def formecho():
 
 # This route shows how to render a page with a form on it.
 
-@app.route('/testform/')
-def testform():
-    # these forms go to the formecho route
-    return render_template('testform.html',
-                           page_title='Page with two Forms')
+@app.route('/CreateAccount/')
+def newAcc():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    if request.method == 'GET':
+        return render_template('createAccount.html',
+                               page_title='Create Account')
+    else:
+        try:
+            # throws error if there's trouble
+            email = request.form['email']
+            username = request.form['username']
+            password = request.form['pass'] 
+            sql = "select * from users where email = %s"
+
+            pass1 = password
+            hashed = bcrypt.hashpw(pass1.encode('utf-8'), bcrypt.gensalt())
+            stored = hashed.decode('utf-8')
+            flash('form submission successful')
+            #redirect to profile upon login
+            return render_template('profile.html')
+
+        except Exception as err:
+            flash('form submission error'+str(err))
+            return redirect( url_for('index') )
 
 
 if __name__ == '__main__':
