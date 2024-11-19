@@ -22,7 +22,7 @@ app.config['TRAP_BAD_REQUEST_ERRORS'] = True
 @app.route('/')
 def index():
     return render_template('main.html',
-                           page_title='Main Page')
+                           page_title='Home')
 
 # You will probably not need the routes below, but they are here
 # just in case. Please delete them if you are not using them
@@ -74,7 +74,7 @@ def login():
 
         except Exception as err:
             flash('form submission error'+str(err))
-            return redirect( url_for('login') )
+            return redirect(url_for('login') )
 
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
@@ -94,7 +94,7 @@ def profile(username):
         reviewsResult = curs.fetchall()
 
         return render_template('profile.html',
-                               page_title='Profile Page',
+                               page_title='My Profile',
                                username=username, currentsResult=currentsResult, friendsResult=friendsResult, reviewsResult = reviewsResult)
     else:
         raise Exception('this cannot happen')
@@ -182,15 +182,32 @@ def insert_media():
             'artist': '',
             'author': ''
         }
-        return render_template('insert.html', media=media)
+        return render_template('insert.html', media=media, page_title='Insert Media')
 
     elif request.method == 'POST':
-        # Form data
+        # Why are we asking for media id?
         title = request.form['title']
         media_type = request.form['media_type']
         director = request.form['director']
         artist = request.form['artist']
         author = request.form['author']
+        if title == "":
+                flash("Please enter a title")
+        if media_type == "":
+            flash("Please enter a media type")
+        if director == "" and artist == "" and author == "":
+            flash("Please enter a director/artist/author")
+        if title == "" or media_type == "" or (director == "" and artist == "" and author == ""):
+            media = {
+            'media_id': '',
+            'title': '',
+            'media_type': '',
+            'director': '',
+            'artist': '',
+            'author': ''
+            }
+            return render_template('insert.html', media=media,
+                               page_title='Insert Media')
 
         try:
             sql = """
@@ -222,8 +239,7 @@ def update_media(media_id):
         if not media:
             flash('Media not found')
             return redirect(url_for('index'))
-
-        return render_template('update.html', media=media)
+        return render_template('update.html', media=media, page_title='Update Media')
 
     elif request.method == 'POST':
         # Form data
