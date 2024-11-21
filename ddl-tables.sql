@@ -1,3 +1,5 @@
+use recap_db;
+
 drop table if exists friends;
 drop table if exists currents;
 drop table if exists reviews;
