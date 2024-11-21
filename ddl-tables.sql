@@ -31,6 +31,7 @@ create table media(
     media_id int auto_increment,
     title varchar(50),
     media_type enum('movie', 'song', 'book'),
+    `release` int,
     director varchar(50),
     artist varchar(50),
     author varchar(50),
