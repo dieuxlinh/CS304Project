@@ -7,7 +7,7 @@ app = Flask(__name__)
 # change comment characters to switch to SQLite
 
 import cs304dbi as dbi
-# import cs304dbi_sqlite3 as dbi
+#import cs304dbi_sqlite3 as dbi
 
 import secrets
 import bcrypt
@@ -265,6 +265,34 @@ def update_media(media_id):
             flash(f"Error updating media: {str(err)}")
             return redirect(url_for('index'))
 
+@app.route('/search/', methods=["GET"])
+def search():
+    #NOTE: Issue if the inputted seach term is just a space
+
+    #Request the inputed search term from the form
+    search_term = request.args.get('search_media')
+
+    #if searchterm is not null, redirect the search_result
+    #else, re-render the template
+    if search_term:
+        return redirect(url_for('search_result', search_term=search_term))
+    else:
+        return render_template('display-search.html', results=None, search_term='', searched = False)
+
+@app.route('/search/<search_term>', methods=["GET"])
+def search_result(search_term):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    
+    #Query for finding the search_term in the media table
+    search_param = f"%{search_term}%"
+    sql = '''select * from media WHERE title like %s'''
+    curs.execute(sql, search_param)
+    results = curs.fetchall()
+
+    return render_template('display-search.html', results=results, search_term=search_term, searched = True)
+
+
 if __name__ == '__main__':
     import sys, os
     if len(sys.argv) > 1:
@@ -274,7 +302,7 @@ if __name__ == '__main__':
     else:
         port = os.getuid()
     # set this local variable to 'wmdb' or your personal or team db
-    db_to_use = 'st107_db' 
+    db_to_use = 'recap_db' 
     print(f'will connect to {db_to_use}')
     dbi.conf(db_to_use)
     app.debug = True
