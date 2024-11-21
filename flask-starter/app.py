@@ -57,7 +57,8 @@ def login():
             
             stored = result['password_hash']
 
-            hashed2 = bcrypt.hashpw(password.encode('utf-8'), stored.encode('utf-8'))
+            hashed2 = bcrypt.hashpw(password.encode('utf-8'), 
+                                    stored.encode('utf-8'))
             hashed2_str = hashed2.decode('utf-8')
 
             if(hashed2_str != stored):
@@ -81,21 +82,29 @@ def profile(username):
     conn = dbi.connect()
     curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
-        sql = 'select media.title from currents inner join media using (media_id) where currents.user_id = %s'
+        sql = '''select media.title from currents inner join media using 
+        (media_id) where currents.user_id = %s
+        '''
         curs.execute(sql, session['uid'])
         currentsResult = curs.fetchall()
         
-        sql = 'select users.username from users inner join friends on friends.friend_id = users.user_id where friends.user_id = %s'
+        sql = '''select users.username from users inner join friends on 
+        friends.friend_id = users.user_id where friends.user_id = %s
+        '''
         curs.execute(sql, session['uid'])
         friendsResult = curs.fetchall()
 
-        sql = 'select media.title, reviews.rating, reviews.review_text from media inner join reviews using (media_id) where reviews.user_id = %s'
+        sql = '''select media.title, reviews.rating, reviews.review_text from 
+        media inner join reviews using (media_id) where reviews.user_id = %s
+        '''
         curs.execute(sql, session['uid'])
         reviewsResult = curs.fetchall()
 
         return render_template('profile.html',
                                page_title='Profile',
-                               username=username, currentsResult=currentsResult, friendsResult=friendsResult, reviewsResult = reviewsResult)
+                               username=username, currentsResult=currentsResult,
+                                friendsResult=friendsResult, 
+                                reviewsResult = reviewsResult)
     else:
         raise Exception('this cannot happen')
 
@@ -147,7 +156,9 @@ def newAcc():
             
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             stored = hashed.decode('utf-8')
-            sql = 'insert into users (username, email, password_hash) values (%s,%s,%s)'
+            sql = '''
+            insert into users (username, email, password_hash) values (%s,%s,%s)
+            '''
             curs.execute(sql, [username, email, stored])
             conn.commit()
             session['username'] = username
@@ -182,7 +193,8 @@ def insert_media():
             'artist': '',
             'author': ''
         }
-        return render_template('insert.html', media=media, page_title='Insert Media')
+        return render_template('insert.html', media=media, 
+                               page_title='Insert Media')
 
     elif request.method == 'POST':
         # Why are we asking for media id?
@@ -197,7 +209,8 @@ def insert_media():
             flash("Please enter a media type")
         if director == "" and artist == "" and author == "":
             flash("Please enter a director/artist/author")
-        if title == "" or media_type == "" or (director == "" and artist == "" and author == ""):
+        if title == "" or media_type == "" or (director == "" and artist == "" 
+                                               and author == ""):
             media = {
             'media_id': '',
             'title': '',
@@ -239,7 +252,8 @@ def update_media(media_id):
         if not media:
             flash('Media not found')
             return redirect(url_for('index'))
-        return render_template('update.html', media=media, page_title='Update Media')
+        return render_template('update.html', media=media, 
+                               page_title='Update Media')
 
     elif request.method == 'POST':
         # Form data
@@ -252,10 +266,12 @@ def update_media(media_id):
         try:
             sql = """
                 UPDATE media
-                SET title = %s, media_type = %s, director = %s, artist = %s, author = %s
+                SET title = %s, media_type = %s, director = %s, artist = %s, 
+                author = %s
                 WHERE media_id = %s
             """
-            curs.execute(sql, (title, media_type, director, artist, author, media_id))
+            curs.execute(sql, (title, media_type, director, artist, author, 
+                               media_id))
             conn.commit()
 
             flash('Media successfully updated')
@@ -277,7 +293,8 @@ def search():
     if search_term:
         return redirect(url_for('search_result', search_term=search_term))
     else:
-        return render_template('display-search.html', results=None, search_term='', searched = False)
+        return render_template('display-search.html', results=None, 
+                               search_term='', searched = False)
 
 @app.route('/search/<search_term>', methods=["GET"])
 def search_result(search_term):
@@ -290,7 +307,8 @@ def search_result(search_term):
     curs.execute(sql, search_param)
     results = curs.fetchall()
 
-    return render_template('display-search.html', results=results, search_term=search_term, searched = True)
+    return render_template('display-search.html', results=results, 
+                           search_term=search_term, searched = True)
 
 
 if __name__ == '__main__':
