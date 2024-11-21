@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+
+<h1>Test Forms</h1>
+
+<!-- two forms, both sending data to the same back-end route -->
+
+<h2>POST form</h2>
+
+<!-- a form that uses POST -->
+
+<form method="post" action="{{url_for('formecho')}}">
+<p><label>Name:
+    <input required type="text" name="user" size="50" placeholder="Arthur, King of the Britons"></label></p>
+
+<p><label>Quest:
+    <textarea required name="quest" rows="3" cols="50" placeholder="To seek the grail"></textarea>
+</label></p>
+
+<p><label>Favorite Color?
+        <select required name="color">
+            <option value="">choose</option>
+            <option>Blue</option>
+            <option value="yellow">No, yel...</option>
+        </select>
+</label></p>
+
+<p><input type="submit" value="process form">
+</form>
+
+<!-- a nearly identical form that uses GET -->
+
+<h2>GET form</h2>
+
+<form method="get" action="{{url_for('formecho')}}">
+<p><label>Name:
+    <input required type="text" name="user" size="50" placeholder="Arthur, King of the Britons"></label></p>
+
+<p><label>Quest:
+    <textarea required name="quest" rows="3" cols="50" placeholder="To seek the grail"></textarea>
+</label></p>
+
+<p><label>Favorite Color?
+        <select required name="color">
+            <option value="">choose</option>
+            <option>Blue</option>
+            <option value="yellow">No, yel...</option>
+        </select>
+</label></p>
+
+<p><input type="submit" value="process form">
+</form>
+
+{% endblock %}
