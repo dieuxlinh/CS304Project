@@ -1,5 +1,4 @@
 -- This is sample data that can be inserted into the database tables.
-
 /* use recap_db;
 
 INSERT INTO users (username, email, password_hash, profile_pic) VALUES ("Sophie", "sophie@gmail.com", "123", "456");
@@ -15,11 +14,5 @@ INSERT INTO currents (user_id, media_id, progress) VALUES (2, 3, 50);
 INSERT INTO friends (user_id, friend_id) VALUES (1,2);
 INSERT INTO friends (user_id, friend_id) VALUES (2,3);
 INSERT INTO friends (user_id, friend_id) VALUES (1,3); */
-
---Should users be able to review the same media twice?
-/* INSERT INTO reviews (media_id, user_id, review_text, rating) VALUES (1, 6, "I like this song", 9);
-INSERT INTO currents (user_id, media_id, progress) VALUES (6, 2, 50);
-INSERT INTO currents (user_id, media_id, progress) VALUES (6, 3, 50);
-INSERT INTO friends (user_id, friend_id) VALUES (6,2);
-INSERT INTO friends (user_id, friend_id) VALUES (6,3);
-INSERT INTO friends (user_id, friend_id) VALUES (6,1); */
+/* INSERT INTO friends (user_id, friend_id) VALUES (5, 1);
+INSERT INTO reviews (media_id, user_id, review_text, rating) VALUES (2, 5, "Awesome Movie", 10); */
