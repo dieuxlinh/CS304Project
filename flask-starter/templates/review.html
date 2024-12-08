@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Review Media </h1>
 
 <form action="{{ url_for('review') }}" method="post">
@@ -16,5 +17,6 @@
 
     <button type="submit">Review</button>
 </form>
+</div>
 
 {% endblock %}

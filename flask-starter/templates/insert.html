@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Insert Media </h1>
 
 <form action="{{ url_for('insert_media', media_id=media['media_id']) }}" method="post">
@@ -22,5 +23,5 @@
 
     <button type="submit">Insert</button>
 </form>
-
+</div>
 {% endblock %}

@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Search Results</h1>
 
 <form action="{{ url_for('search') }}" method="get">
-    <p>
-        <label for="search">Search for Media</label>
+        <label for="search">Search for Media:</label>
         <input id="search" type="text" name="search_media" 
         value="{{ search_term | default('') }}">
-    </p>
     <button type="submit">Search</button>
 </form>
 
@@ -23,5 +22,5 @@
         <p>No results found.</p>
     {% endif %}
 </section>
-
+</div>
 {% endblock %}

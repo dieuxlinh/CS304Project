@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Welcome {{name}}</h1>
 
 <form method="post" action="">
@@ -10,5 +11,6 @@
     <p>Please enter your <label for ="pass">Password: <input type = "text" name="pass"></label></p>
     <p><input type="submit" name="submit" value="Login"> <a href = "{{ url_for('newAcc')}}">Create new account</a></p>
 </form>
+</div>
 
 {% endblock %}
