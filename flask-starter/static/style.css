@@ -37,6 +37,7 @@ html {
     }
 
     nav {
+        margin: 0;
         background-color: var(--color-nav-bg);
         border-bottom: 2px solid var(--color-border);
         padding: 10px 0;
@@ -107,5 +108,8 @@ html {
             width: 90%;
             margin: 5px auto;
         }
+    }
+    .content-wrapper {
+        margin: 10px; /* Adds margin for the rest of the content */
     }
 }

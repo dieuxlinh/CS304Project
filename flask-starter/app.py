@@ -11,6 +11,7 @@ import cs304dbi as dbi
 
 import secrets
 import bcrypt
+import finalproj as f
 
 app.secret_key = 'your secret here'
 # replace that with a random key
@@ -28,7 +29,7 @@ def index():
 @app.route('/login/', methods=["GET", "POST"])
 def login():
     conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
+    
     if request.method == 'GET':
         return render_template('login.html',
                                page_title='Login')
@@ -44,25 +45,10 @@ def login():
                 return render_template('login.html',
                                page_title='Login')
             
-            sql = "select user_id, password_hash from users where username = %s"
-            curs.execute(sql, username)
-            result = curs.fetchone()
-
-            #result is none where username does not exist in db yet
-            if result is None:
-                flash('Incorrect login')
-                return render_template('login.html',
-                               page_title='Login')
+            result = f.check_login(conn,username,password)
             
-            #determine if inputted password is the correct one
-            stored = result['password_hash']
-
-            hashed2 = bcrypt.hashpw(password.encode('utf-8'), 
-                                    stored.encode('utf-8'))
-            hashed2_str = hashed2.decode('utf-8')
-
-            if(hashed2_str != stored):
-                flash('Incorrect password')
+            if result is None or result is False:
+                flash('Incorrect login')
                 return render_template('login.html',
                                page_title='Login')
             else:
@@ -80,33 +66,23 @@ def login():
 
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
+
+    uid = session.get('uid')
+
+    if not uid:
+        return redirect(url_for('index'))
+    
     conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
         #select statements to display information about user
-        sql = '''select media.title from currents inner join media using 
-        (media_id) where currents.user_id = %s
-        '''
-        curs.execute(sql, session['uid'])
-        currentsResult = curs.fetchall()
-        
-        sql = '''select users.username from users inner join friends on 
-        friends.friend_id = users.user_id where friends.user_id = %s
-        '''
-        curs.execute(sql, session['uid'])
-        friendsResult = curs.fetchall()
-
-        sql = '''select media.title, reviews.rating, reviews.review_text from 
-        media inner join reviews using (media_id) where reviews.user_id = %s
-        '''
-        curs.execute(sql, session['uid'])
-        reviewsResult = curs.fetchall()
+        currentsResult,friendsResult,reviewsResult = f.profile_render(conn,
+                                                                      session)
 
         return render_template('profile.html',
                                page_title='Profile',
                                username=username, currentsResult=currentsResult,
-                                friendsResult=friendsResult, 
-                                reviewsResult = reviewsResult)
+                               friendsResult=friendsResult, 
+                               reviewsResult = reviewsResult)
     else:
         raise Exception('this cannot happen')
 
@@ -121,8 +97,6 @@ def logout():
 
 @app.route('/CreateAccount/', methods=['GET','POST'])
 def newAcc():
-    conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
         return render_template('createAccount.html',
                                page_title='Create Account')
@@ -143,37 +117,22 @@ def newAcc():
                 return render_template('createAccount.html',
                                page_title='Create Account')
             
-            #check if email or username are alreay associated with an account
-            sql = "select * from users where email = %s"
-            curs.execute(sql, email)
-            result = curs.fetchone()
+            conn = dbi.connect()
+            result = f.check_email(conn,email)
             if result:
                 flash("Email already associated with an account")
                 return redirect (url_for('login'))
             
-            sql = "select * from users where username = %s"
-            curs.execute(sql, username)
-            result = curs.fetchone()
+            result = f.check_username(conn,username)
             if result:
                 flash("Username already in use")
                 return render_template('createAccount.html',
                                page_title='Create Account')
             
-            #hash the inputted password and insert user into db
-            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            stored = hashed.decode('utf-8')
-            sql = '''
-            insert into users (username, email, password_hash) values (%s,%s,%s)
-            '''
-            curs.execute(sql, [username, email, stored])
-            conn.commit()
-            session['username'] = username
-
-            sql = 'select user_id from users where username = %s'
-            curs.execute(sql, username)
-            result = curs.fetchone()
+            result = f.add_new_user(conn,username,password,email)
             
             #log in with inputted data
+            session['username'] = username
             session['uid'] = result['user_id']
             session['logged_in'] = True
             session['visits'] = 1
@@ -183,12 +142,14 @@ def newAcc():
 
         except Exception as err:
             flash('form submission error'+str(err))
-            return redirect( url_for('index') )
+            return redirect(url_for('index') )
 
 @app.route('/insert_media/', methods=["GET", "POST"])
 def insert_media():
-    conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
+    uid = session.get('uid')
+
+    if not uid:
+        return redirect(url_for('index'))
 
     if request.method == 'GET':
         # Pass empty values or defaults to the template
@@ -229,14 +190,8 @@ def insert_media():
                                page_title='Insert Media')
 
         try:
-            #insert media info into db
-            sql = """
-                INSERT INTO media (title, media_type, director, artist, author)
-                VALUES (%s, %s, %s, %s, %s)
-            """
-            curs.execute(sql, (title, media_type, director, artist, author))
-            conn.commit()
-
+            conn = dbi.connect()
+            f.insert_media(conn,title,media_type,director,artist,author)
             flash('Media successfully inserted')
             return redirect(url_for('index'))
 
@@ -247,15 +202,15 @@ def insert_media():
 
 @app.route('/update_media/<int:media_id>/', methods=["GET", "POST"])
 def update_media(media_id):
-    conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
+    
+    uid = session.get('uid')
 
+    if not uid:
+        return redirect(url_for('index'))
+    conn = dbi.connect()
     if request.method == 'GET':
         # Current media data
-        sql = 'SELECT * FROM media WHERE media_id = %s'
-        curs.execute(sql, (media_id,))
-        media = curs.fetchone()
-
+        media = f.update_render(conn,media_id)
         if not media:
             flash('Media not found')
             return redirect(url_for('index'))
@@ -271,15 +226,7 @@ def update_media(media_id):
         author = request.form['author']
 
         try:
-            sql = """
-                UPDATE media
-                SET title = %s, media_type = %s, director = %s, artist = %s, 
-                author = %s
-                WHERE media_id = %s
-            """
-            curs.execute(sql, (title, media_type, director, artist, author, 
-                               media_id))
-            conn.commit()
+            f.update_movie(conn,title,media_type,director,artist,author,media_id)
 
             flash('Media successfully updated')
             return redirect(url_for('index'))
@@ -290,7 +237,10 @@ def update_media(media_id):
 
 @app.route('/search/', methods=["GET"])
 def search():
+    uid = session.get('uid')
 
+    if not uid:
+        return redirect(url_for('index'))
     #Request the inputed search term from the form
     search_term = request.args.get('search_media')
 
@@ -301,35 +251,52 @@ def search():
     else:
         flash("Please enter something in the search bar")
         return render_template('display-search.html', results=None, 
-                               search_term='', searched = False)
+                               search_term='', searched = False,
+                               page_title='Search')
 
 @app.route('/search/<search_term>', methods=["GET"])
 def search_result(search_term):
     conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
+    
+    uid = session.get('uid')
+
+    if not uid:
+        return redirect(url_for('index'))
     
     #Query for finding the search_term in the media table
-    search_param = f"%{search_term}%"
-    sql = '''select * from media WHERE title like %s'''
-    curs.execute(sql, search_param)
-    results = curs.fetchall()
+    results = f.search_render(conn,search_term)
 
     return render_template('display-search.html', results=results, 
-                           search_term=search_term, searched = True)
+                           search_term=search_term, searched = True,
+                           page_title='Search Results')
 
 @app.route('/review/', methods=['GET','POST'])
 def review():
+    uid = session.get('uid')
+
+    if not uid:
+        flash("Please login")
+        return redirect(url_for('index'))
+
     conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
     if request.method == 'GET':
+        tt = request.args.get('media_id')
+        if tt:
+            media = f.review_render(conn,tt)
+        else:
+            media = {
+            'title': '',
+            }
         return render_template('review.html', 
-                               page_title='Review Media')
+                            page_title='Review Media', 
+                            media_title = media['title'], media_id = tt)
 
     elif request.method == 'POST':
         # Form data
         title = request.form['title']
         review_text = request.form['review']
         rating = request.form['Rating']
+        media_id = request.form['media_id']
 
         #make sure all form data is filled out
         if title == "":
@@ -341,27 +308,11 @@ def review():
         if title == "" or review_text == "" or rating == "":
             return render_template('review.html', 
                                page_title='Review Media')
-        #get id for media (will prob be changed later)
-        sql = """
-        select media_id from media where title = %s
-        """
-        curs.execute(sql, [title])
-        result = curs.fetchone()
-        if result:
-            #insert review
-            sql = """
-                INSERT INTO reviews (media_id, user_id, review_text, rating) 
-                VALUES (%s, %s, %s, %s)
-                """
-            curs.execute(sql, [result['media_id'], session["uid"], 
-            review_text, rating])
-            conn.commit()
-            flash("Media reviewed")
-            return redirect(url_for('profile', username=session['username']))
-        else:
-            #If media doesnt exist yet in db get redirected
-            flash("This media has not been inserted")
-            return redirect(url_for('insert_media'))
+
+        f.insert_review(conn,media_id, session['uid'], review_text, rating)
+        flash("Media reviewed")
+        return redirect(url_for('profile', username=session['username']))
+
 if __name__ == '__main__':
     import sys, os
     if len(sys.argv) > 1:
