@@ -2,7 +2,12 @@
 
 {% block main_content %}
 <div class="content-wrapper">
-    <h1>Welcome {{username}}!</h1>
+    <div class="button_header">
+        <h1>Welcome {{username}}!</h1>
+        <form method="get" action="{{ url_for('friends', user_id = user_id) }}">
+            <input type="submit" value="My Friends List">
+        </form>
+    </div>
 
     {% if profilePic['profile_pic'] is not none %}
         <p><img src="{{ url_for('uploaded_file', filename = profilePic['profile_pic']) }}"  style="max-width:50%;" alt="Profile Picture"></p>
@@ -18,17 +23,22 @@
 
     <p>Currents:</p>
     {% for curr in currentsResult %}
-        <li>{{curr['title']}}</li>
-    {% endfor %}
- 
-    <p>Friends:</p>
-    {% for friend in friendsResult %}
-        <li>{{friend['username']}}</li>
+    <div class="current-wrapper">
+        <li><label for="current">{{curr['title']}}</label>
+            <progress id="current" value="{{curr['progress']}}" max="100"></progress>
+            <span>{{curr['progress']}}% </span>
+            <form method = "get" action ="{{ url_for('update_currents', media_id = curr['media_id'] )}}">
+                <input type="hidden" name="current_id" value="{{curr['current_id']}}">
+                <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required>
+                <button type="submit" value ="Update">Update</button>
+            </form>
+        </li>
+</div>
     {% endfor %}
  
     <p>Reviews:</p>
     {% for review in reviewsResult %}
-        <li>{{review['title']}} {{review['rating']}}</li>
+        <li>{{review['title']}} - {{review['rating']}}</li>
         <p>{{review['review_text']}}</p>
     {% endfor %}
 

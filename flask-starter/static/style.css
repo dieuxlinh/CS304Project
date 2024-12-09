@@ -112,4 +112,19 @@ html {
     .content-wrapper {
         margin: 10px; /* Adds margin for the rest of the content */
     }
+    .button_header{
+        display:flex;
+        align-items: center;
+        justify-content: space-between;
+        width:100%;
+        margin-bottom: 0;
+    }
+    .button_header h1{
+        margin:0;
+    }
+    .current-wrapper li {
+        display: flex; 
+        align-items: center; 
+        gap: 10px;
+    }
 }

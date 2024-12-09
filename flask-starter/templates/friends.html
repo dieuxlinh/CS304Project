@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<div class="content-wrapper">
+    <h1>My Friends</h1>
+
+    {% for friend in friendsResult %}
+        <li>{{friend['username']}}</li>
+    {% endfor %}
+
+</div>
+{% endblock %}
