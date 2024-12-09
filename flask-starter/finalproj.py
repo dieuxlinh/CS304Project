@@ -41,7 +41,7 @@ def check_pass(stored, password):
 
 def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
-    sql = """select media.title, progress, media.media_id, current_id from currents inner join media using 
+    sql = """select media.title, media_type, progress, media.media_id, current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
         """
     curs.execute(sql, session["uid"])

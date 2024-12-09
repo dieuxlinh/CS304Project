@@ -24,7 +24,7 @@
     <p>Currents:</p>
     {% for curr in currentsResult %}
     <div class="current-wrapper">
-        <li><label for="current">{{curr['title']}}</label>
+        <li><label for="current">{{curr['title']}} ({{curr['media_type']}})</label>
             <progress id="current" value="{{curr['progress']}}" max="100"></progress>
             <span>{{curr['progress']}}% </span>
             <form method = "get" action ="{{ url_for('update_currents', media_id = curr['media_id'] )}}">
