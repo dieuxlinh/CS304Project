@@ -80,9 +80,6 @@ def delete_pic(conn, user_id):
                  [user_id])
     conn.commit()
 
-    
-
-
 def check_email(conn, email):
     curs = dbi.dict_cursor(conn)
     # check if email or username are alreay associated with an account
@@ -223,7 +220,6 @@ def friends_render(conn, user_id):
     curs.execute(sql, [user_id])
     friendsResult = curs.fetchall()
     return friendsResult
-
 
 def add_to_currents(conn, user_id, media_id, progress):
     curs = dbi.dict_cursor(conn)

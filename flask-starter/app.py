@@ -254,7 +254,7 @@ def newAcc():
             flash("form submission error" + str(err))
             return redirect(url_for("index"))
 
-
+#Ariel starts here
 @app.route("/insert_media/", methods=["GET", "POST"])
 def insert_media():
     uid = session.get("uid")
@@ -443,7 +443,6 @@ def review():
         flash("Media reviewed")
         return redirect(url_for("profile", username=session["username"]))
 
-
 @app.route("/media/<int:media_id>")
 def media(media_id):
     conn = dbi.connect()
@@ -462,7 +461,6 @@ def media(media_id):
         media_id=media_id,
     )
 
-
 @app.route("/friends/<int:user_id>")
 def friends(user_id):
     conn = dbi.connect()
@@ -470,7 +468,6 @@ def friends(user_id):
     return render_template(
         "friends.html", page_title="My Friends", friendsResult=friendsResult
     )
-
 
 @app.route("/current/<int:media_id>", methods=["GET", "POST"])
 def currents(media_id):
@@ -492,7 +489,6 @@ def currents(media_id):
         f.add_to_currents(conn, uid, media_id, progress)
         return redirect(url_for("profile", username=session.get("username")))
 
-
 @app.route("/updateCurrent/<int:media_id>", methods=["GET"])
 def update_currents(media_id):
     conn = dbi.connect()
@@ -502,7 +498,6 @@ def update_currents(media_id):
     if result is None:
         return redirect(url_for("review_finished", media_id=media_id))
     return redirect(url_for("profile", username=session.get("username")))
-
 
 @app.route("/review_finished/<int:media_id>")
 def review_finished(media_id):
@@ -514,7 +509,6 @@ def review_finished(media_id):
         media_title=media["title"],
         media_id=media_id,
     )
-
 
 if __name__ == "__main__":
     import sys, os
