@@ -43,7 +43,30 @@ def profile_render(conn, session):
         '''
     curs.execute(sql, session['uid'])
     reviewsResult = curs.fetchall()
-    return currentsResult, friendsResult, reviewsResult
+
+    sql = '''select profile_pic from users where users.user_id = %s '''
+    curs.execute(sql, session['uid'])
+    profilePic = curs.fetchone()
+
+    return currentsResult, friendsResult, reviewsResult, profilePic
+
+def insert_pic(conn, profile_pic, user_id):
+    curs = dbi.cursor(conn)
+    try:
+        curs.execute('''insert into users(user_id, profile_pic) values (%s,%s)
+                        on duplicate key update profile_pic = %s''',
+                     [user_id, profile_pic, profile_pic])
+        conn.commit()
+        print('Picture updated')
+    except Exception as err:
+        print('Exception on insert of {}: {}'.format(user_id, repr(err)))
+
+def delete_pic(conn, user_id):
+    curs = dbi.cursor(conn)
+    curs.execute('''update users set profile_pic = NULL
+                    where user_id = %s''',
+                 [user_id])
+    conn.commit()
 
 def check_email(conn,email):
     curs = dbi.dict_cursor(conn)

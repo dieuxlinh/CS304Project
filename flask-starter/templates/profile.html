@@ -3,6 +3,19 @@
 {% block main_content %}
 <div class="content-wrapper">
     <h1>Welcome {{username}}!</h1>
+
+    {% if profilePic['profile_pic'] is not none %}
+        <p><img src="{{ url_for('uploaded_file', filename = profilePic['profile_pic']) }}"  style="max-width:50%;" alt="Profile Picture"></p>
+    {% else %}
+        <p>No Profile Picture</p>
+    {% endif %}
+
+    <form method="post" action="" enctype="multipart/form-data">
+        <p><label>Picture: <input type="file" name="pfp" value = "Change Profile Picture"></label></p>
+        <p><input type="submit" name = "submit" value="Upload">
+        <input type="submit"  name = "submit" value="Delete"></p>
+    </form>
+
     <p>Currents:</p>
     {% for curr in currentsResult %}
         <li>{{curr['title']}}</li>

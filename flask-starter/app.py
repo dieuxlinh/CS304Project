@@ -11,6 +11,7 @@ import cs304dbi as dbi
 
 import secrets
 import bcrypt
+import imghdr
 import finalproj as f
 
 app.secret_key = 'your secret here'
@@ -19,6 +20,10 @@ app.secret_key = secrets.token_hex()
 
 # This gets us better error messages for certain common request errors
 app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+
+# for file upload
+app.config['UPLOADS'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
 @app.route('/')
 def index():
@@ -64,6 +69,10 @@ def login():
             flash('form submission error'+str(err))
             return redirect(url_for('login') )
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOADS'], filename)
+
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
 
@@ -73,18 +82,62 @@ def profile(username):
         return redirect(url_for('index'))
     
     conn = dbi.connect()
+
     if request.method == 'GET':
         #select statements to display information about user
-        currentsResult,friendsResult,reviewsResult = f.profile_render(conn,
-                                                                      session)
+        currentsResult,friendsResult,reviewsResult,profilePic = f.profile_render(conn,
+                                                                    session)
 
         return render_template('profile.html',
                                page_title='Profile',
                                username=username, currentsResult=currentsResult,
                                friendsResult=friendsResult, 
-                               reviewsResult = reviewsResult)
+                               reviewsResult = reviewsResult,
+                               profilePic = profilePic)
     else:
-        raise Exception('this cannot happen')
+        submit_action = request.form.get('submit')
+
+        if submit_action == 'Upload':
+            print(submit_action)
+            try:
+                #if no file is selected, flash message
+                if 'pfp' not in request.files or request.files['pfp'].filename == '':
+                    flash('No selected file')
+                    return redirect(url_for('profile', username=username))
+                
+                #change file name and create file path
+                pfp = request.files['pfp']
+                user_pic = pfp.filename
+
+                ext = user_pic.split('.')[-1]
+                if ext not in ['jpg', 'jpeg', 'png']:
+                    flash('Incompatiable File Type. Please upload a .jpg, .jpeg, or .png file.')
+                    return redirect(url_for('profile', username=username))
+
+                filename = secure_filename('{}.{}'.format(uid,ext))
+                pathname = os.path.join(app.config['UPLOADS'],filename)
+                pfp.save(pathname)
+
+                #add file
+                f.insert_pic(conn, filename, uid)
+                flash('Upload successful')
+
+                return redirect(url_for('profile', username=username))
+            
+            except Exception as err:
+                flash('Upload failed {why}'.format(why=err))
+                return redirect(url_for('profile', username=username))
+            
+        elif submit_action == "Delete":
+            try:
+                f.delete_pic(conn, uid)
+                flash(f'Profile Picture Deleted')
+                return redirect(url_for('profile', username=username))
+
+            except Exception as err:
+                flash(f'Error deleting movie: {err}')
+                return redirect(url_for('profile', username=username))
+
 
 @app.route('/logout/')
 def logout():
