@@ -38,7 +38,7 @@
  
     <p>Reviews:</p>
     {% for review in reviewsResult %}
-        <li>{{review['title']}} - {{review['rating']}}</li>
+        <li>{{review['title']}} ({{review['media_type']}}): {{review['rating']}}</li>
         <p>{{review['review_text']}}</p>
     {% endfor %}
 

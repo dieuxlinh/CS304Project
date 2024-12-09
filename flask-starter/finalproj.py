@@ -47,7 +47,7 @@ def profile_render(conn, session):
     curs.execute(sql, session["uid"])
     currentsResult = curs.fetchall()
 
-    sql = """select media.title, reviews.rating, reviews.review_text from 
+    sql = """select media.title, media.media_type, reviews.rating, reviews.review_text from 
         media inner join reviews using (media_id) where reviews.user_id = %s
         """
     curs.execute(sql, session["uid"])
@@ -72,10 +72,13 @@ def insert_pic(conn, profile_pic, user_id):
 
 def delete_pic(conn, user_id):
     curs = dbi.cursor(conn)
+    path = '/'
     curs.execute('''update users set profile_pic = NULL
                     where user_id = %s''',
                  [user_id])
     conn.commit()
+
+    
 
 
 def check_email(conn, email):
@@ -252,3 +255,12 @@ def validate_user(conn, uid, username):
         return result[0] > 0
     except Exception as e:
         raise RuntimeError(f"Error validating user: {e}")
+
+def check_currents(conn, user_id, media_id):
+    curs = dbi.dict_cursor(conn)
+    sql = "select current_id from currents where user_id = %s and media_id = %s"
+    curs.execute(sql, [user_id, media_id])
+    result = curs.fetchone()
+    if result:
+        flash("Already in currents")
+        return None

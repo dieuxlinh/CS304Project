@@ -443,7 +443,11 @@ def friends(user_id):
 @app.route("/current/<int:media_id>", methods=["GET", "POST"])
 def currents(media_id):
     conn = dbi.connect()
+    uid = session.get("uid")
     if request.method == "GET":
+        result = f.check_currents(conn,uid,media_id)
+        if result is None:
+            return redirect(url_for(('index')))
         title = f.render_currents_form(conn, media_id)
         return render_template(
             "currents.html",
@@ -452,7 +456,6 @@ def currents(media_id):
             media_id=media_id,
         )
     else:
-        uid = session.get("uid")
         progress = request.form["progress"]
         f.add_to_currents(conn, uid, media_id, progress)
         return redirect(url_for("profile", username=session.get("username")))
