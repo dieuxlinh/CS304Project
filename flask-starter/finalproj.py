@@ -41,14 +41,16 @@ def check_pass(stored, password):
 
 def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
-    sql = """select media.title, media_type, progress, media.media_id, current_id from currents inner join media using 
+    sql = """select media.title, media_type, progress, media.media_id, 
+        current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
         """
     curs.execute(sql, session["uid"])
     currentsResult = curs.fetchall()
 
-    sql = """select media.title, media.media_type, reviews.rating, reviews.review_text from 
-        media inner join reviews using (media_id) where reviews.user_id = %s
+    sql = """select media.title, media.media_type, reviews.rating, 
+        reviews.review_text from media inner join reviews using (media_id) 
+        where reviews.user_id = %s
         """
     curs.execute(sql, session["uid"])
     reviewsResult = curs.fetchall()
@@ -106,7 +108,8 @@ def add_new_user(conn, username, password, email):
     # thread safety
     try:
         sql = """
-            insert into users (username, email, password_hash) values (%s,%s,%s)
+            insert into users (username, email, password_hash) 
+            values (%s,%s,%s)
             """
         curs.execute(sql, [username, email, stored])
         conn.commit()
@@ -154,7 +157,9 @@ def update_movie(conn, title, media_type, director, artist, author, media_id):
 def search_render(conn, search_term):
     curs = dbi.dict_cursor(conn)
     search_param = f"%{search_term}%"
-    sql = """select media_id, title, media_type from media WHERE title like %s"""
+    sql = """select media_id, title, media_type from media 
+            WHERE title like %s
+        """
     curs.execute(sql, search_param)
     results = curs.fetchall()
     return results
@@ -180,11 +185,14 @@ def review_render(conn, media_id):
 
 def media_page_render(conn, media_id):
     curs = dbi.dict_cursor(conn)
-    sql = "select users.username, reviews.review_text, reviews.rating from reviews join users on reviews.user_id = users.user_id where reviews.media_id = %s"
+    sql = """select users.username, reviews.review_text, reviews.rating from 
+            reviews join users on reviews.user_id = users.user_id 
+            where reviews.media_id = %s"""
     curs.execute(sql, [media_id])
     reviews = curs.fetchall()
 
-    sql = "select title, media_type, director, artist, author from media where media_id = %s"
+    sql = """select title, media_type, director, artist, author from media 
+            where media_id = %s"""
     curs.execute(sql, [media_id])
     media_info = curs.fetchone()
 
@@ -249,7 +257,8 @@ def update_current_progress(conn, new_progress, current_id):
 def validate_user(conn, uid, username):
     try:
         cursor = conn.cursor()
-        query = """SELECT COUNT(*) FROM users WHERE user_id = %s AND username = %s"""
+        query = """SELECT COUNT(*) FROM users WHERE user_id = %s 
+                    AND username = %s"""
         cursor.execute(query, (uid, username))
         result = cursor.fetchone()
         return result[0] > 0
@@ -264,3 +273,5 @@ def check_currents(conn, user_id, media_id):
     if result:
         flash("Already in currents")
         return None
+    else:
+        return True

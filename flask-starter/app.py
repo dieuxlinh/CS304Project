@@ -72,7 +72,8 @@ def login():
                 session["logged_in"] = True
                 session["visits"] = 1
                 return redirect(
-                    url_for("profile", username=username, user_id=result["user_id"])
+                    url_for("profile", username=username,
+                             user_id=result["user_id"])
                 )
 
         except Exception as err:
@@ -107,7 +108,8 @@ def profile(username):
         try:
             return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult, 
+                                username=username, 
+                                currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
@@ -123,7 +125,8 @@ def profile(username):
             print(submit_action)
             try:
                 #if no file is selected, flash message
-                if 'pfp' not in request.files or request.files['pfp'].filename == '':
+                fname = request.files['pfp'].filename
+                if 'pfp' not in request.files or fname == '':
                     flash('No selected file')
                     return redirect(url_for('profile', username=username))
                 
@@ -133,7 +136,8 @@ def profile(username):
 
                 ext = user_pic.split('.')[-1]
                 if ext not in ['jpg', 'jpeg', 'png']:
-                    flash('Incompatiable File Type. Please upload a .jpg, .jpeg, or .png file.')
+                    flash("""Incompatiable File Type. 
+                          Please upload a .jpg, .jpeg, or .png file.""")
                     return redirect(url_for('profile', username=username))
 
                 filename = secure_filename('{}.{}'.format(uid,ext))
@@ -146,7 +150,8 @@ def profile(username):
 
                 return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult, 
+                                username=username, 
+                                currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
@@ -155,7 +160,8 @@ def profile(username):
                 flash('Upload failed {why}'.format(why=err))
                 return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult, 
+                                username=username, 
+                                currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
@@ -166,7 +172,8 @@ def profile(username):
                 flash(f'Profile Picture Deleted')
                 return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult, 
+                                username=username, 
+                                currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
@@ -175,7 +182,8 @@ def profile(username):
                 flash(f'Error deleting movie: {err}')
                 return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult, 
+                                username=username, 
+                                currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
@@ -194,7 +202,8 @@ def logout():
 @app.route("/CreateAccount/", methods=["GET", "POST"])
 def newAcc():
     if request.method == "GET":
-        return render_template("createAccount.html", page_title="Create Account")
+        return render_template("createAccount.html", 
+                               page_title="Create Account")
     else:
         try:
             # get information from form
@@ -262,7 +271,8 @@ def insert_media():
             "artist": "",
             "author": "",
         }
-        return render_template("insert.html", media=media, page_title="Insert Media")
+        return render_template("insert.html", media=media, 
+                               page_title="Insert Media")
 
     elif request.method == "POST":
         title = request.form["title"]
@@ -319,7 +329,8 @@ def update_media(media_id):
         if not media:
             flash("Media not found")
             return redirect(url_for("index"))
-        return render_template("update.html", media=media, page_title="Update Media")
+        return render_template("update.html", media=media, 
+                               page_title="Update Media")
 
     elif request.method == "POST":
         # Form data
@@ -330,7 +341,8 @@ def update_media(media_id):
         author = request.form["author"]
 
         try:
-            f.update_movie(conn, title, media_type, director, artist, author, media_id)
+            f.update_movie(conn, title, media_type, director, artist, author, 
+                           media_id)
 
             flash("Media successfully updated")
             return redirect(url_for("index"))

@@ -28,9 +28,10 @@
             <progress id="current" value="{{curr['progress']}}" max="100"></progress>
             <span>{{curr['progress']}}% </span>
             <form method = "get" action ="{{ url_for('update_currents', media_id = curr['media_id'] )}}">
+                <p><label>Update Currents: <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required></label>
+                    <button type="submit" value ="Update">Update</button></p>
                 <input type="hidden" name="current_id" value="{{curr['current_id']}}">
-                <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required>
-                <button type="submit" value ="Update">Update</button>
+                
             </form>
         </li>
 </div>
