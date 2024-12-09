@@ -3,27 +3,29 @@
 {% block main_content %}
 <div class="content-wrapper">
     <div class="button_header">
-    <h1>{{result.media.title}}</h1>
-    <form method="get" action="{{url_for('update_media', media_id = media_id)}}">
-        <input type="submit" value="Update Media">
-        <input type="submit" formaction="{{url_for('currents', media_id=media_id)}}" value = "Add to currents">
-    </form>
+        <h1>{{ result.media.title }}</h1>
+        <form method="get" action="{{ url_for('update_media', media_id=media_id) }}">
+            <input type="submit" value="Update Media">
+            <input type="submit" formaction="{{ url_for('currents', media_id=media_id) }}" value="Add to currents">
+        </form>
     </div>
-    <p>{{result.media.title}} is a {{result.media.media_type}} from {{person}} with an average rating of {{result.media.avg_rating['avg_rating']}}</p>
+    <p>{{ result.media.title }} is a {{ result.media.media_type }} from {{ person }} 
+       with an average rating of 
+       {{ result.media.avg_rating['avg_rating'] if result.media.avg_rating and 'avg_rating' in result.media.avg_rating else 'N/A' }}.
+    </p>
 
     <h2>Reviews:</h2>
     {% if result.reviews %}
         <ul>
-        {% for review in result.reviews %}
-            <li>{{review.username}} - {{review.rating}}</li>
-            <p>{{review.review_text}}</p>
-            <br>
-        {% endfor %}
-    </ul>
+            {% for review in result.reviews %}
+                <li>
+                    {{ review.username }} - {{ review.rating }}
+                    <p>{{ review.review_text }}</p>
+                </li>
+            {% endfor %}
+        </ul>
     {% else %}
         <p>No reviews yet</p>
     {% endif %}
- 
 </div>
-
 {% endblock %}
