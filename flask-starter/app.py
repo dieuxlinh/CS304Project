@@ -99,12 +99,12 @@ def profile(username):
             flash("Unauthorized access to profile.")
             return redirect(url_for("index"))
 
+    #select statements to display information about user
+    currentsResult,reviewsResult,profilePic = f.profile_render(conn,
+                                                                session)
+
     if request.method == 'GET':
         try:
-            #select statements to display information about user
-            currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                        session)
-
             return render_template('profile.html',
                                 page_title='Profile',
                                 username=username, currentsResult=currentsResult, 
@@ -144,21 +144,41 @@ def profile(username):
                 f.insert_pic(conn, filename, uid)
                 flash('Upload successful')
 
-                return redirect(url_for('profile', username=username))
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
             
             except Exception as err:
                 flash('Upload failed {why}'.format(why=err))
-                return redirect(url_for('profile', username=username))
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
             
         elif submit_action == "Delete":
             try:
                 f.delete_pic(conn, uid)
                 flash(f'Profile Picture Deleted')
-                return redirect(url_for('profile', username=username))
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
 
             except Exception as err:
                 flash(f'Error deleting movie: {err}')
-                return redirect(url_for('profile', username=username))
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
 
 
 
