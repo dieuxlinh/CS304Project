@@ -22,7 +22,6 @@ import cs304dbi as dbi
 # import cs304dbi_sqlite3 as dbi
 
 import secrets
-import bcrypt
 import finalproj as f
 
 app.secret_key = "your secret here"
@@ -37,11 +36,12 @@ app.config["TRAP_BAD_REQUEST_ERRORS"] = True
 app.config['UPLOADS'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
+#Route to render the basic homepage
 @app.route('/')
 def index():
     return render_template("main.html", page_title="Home")
 
-
+#login route
 @app.route("/login/", methods=["GET", "POST"])
 def login():
     conn = dbi.connect()
@@ -50,6 +50,7 @@ def login():
         return render_template("login.html", page_title="Login")
     else:
         try:
+            #get user and pass from the form (check both were inputted)
             username = request.form["username"]
             password = request.form["pass"]
             if username == "":
@@ -59,6 +60,8 @@ def login():
             if username == "" or password == "":
                 return render_template("login.html", page_title="Login")
 
+            #result contains the user_id of the person logged in or None if the
+            #login info was incorrect
             result = f.check_login(conn, username, password)
 
             if result is None or result is False:
@@ -68,12 +71,12 @@ def login():
                 flash("successfully logged in as " + username)
                 # add log in info to session
                 session["username"] = username
-                session["uid"] = result["user_id"]
+                session["uid"] = result
                 session["logged_in"] = True
                 session["visits"] = 1
                 return redirect(
                     url_for("profile", username=username,
-                             user_id=result["user_id"])
+                             user_id=result)
                 )
 
         except Exception as err:

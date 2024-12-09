@@ -25,7 +25,7 @@ def check_login(conn, username, password):
         return None
     else:
         if check_pass(result["password_hash"], password):
-            return result
+            return result.get('user_id')
         else:
             return False
 
