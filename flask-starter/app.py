@@ -23,7 +23,6 @@ import cs304dbi as dbi
 
 import secrets
 import bcrypt
-import imghdr
 import finalproj as f
 
 app.secret_key = "your secret here"
@@ -103,14 +102,14 @@ def profile(username):
     if request.method == 'GET':
         try:
             #select statements to display information about user
-            currentsResult,friendsResult,reviewsResult,profilePic = f.profile_render(conn,
+            currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                         session)
 
             return render_template('profile.html',
                                 page_title='Profile',
-                                username=username, currentsResult=currentsResult,
-                                friendsResult=friendsResult, 
+                                username=username, currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
                                 profilePic = profilePic)
         except Exception as e:
             app.logger.error(f"Error displaying profile for {username}: {e}")
