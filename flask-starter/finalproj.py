@@ -32,18 +32,12 @@ def profile_render(conn, session):
     curs.execute(sql, session['uid'])
     currentsResult = curs.fetchall()
         
-    sql = '''select users.username from users inner join friends on 
-        friends.friend_id = users.user_id where friends.user_id = %s
-        '''
-    curs.execute(sql, session['uid'])
-    friendsResult = curs.fetchall()
-
     sql = '''select media.title, reviews.rating, reviews.review_text from 
         media inner join reviews using (media_id) where reviews.user_id = %s
         '''
     curs.execute(sql, session['uid'])
     reviewsResult = curs.fetchall()
-    return currentsResult, friendsResult, reviewsResult
+    return currentsResult, reviewsResult
 
 def check_email(conn,email):
     curs = dbi.dict_cursor(conn)
@@ -125,8 +119,46 @@ def insert_review(conn,media_id,user_id,review_text,rating):
     conn.commit()
 
 def review_render(conn,media_id):
-    sql = "select title from media where media_id = %s"
     curs = dbi.dict_cursor(conn)
+    sql = "select title from media where media_id = %s"
     curs.execute(sql, [media_id])
     result = curs.fetchone()
     return result
+
+def media_page_render(conn,media_id):
+    curs = dbi.dict_cursor(conn)
+    sql = "select users.username, reviews.review_text, reviews.rating from reviews join users on reviews.user_id = users.user_id where reviews.media_id = %s"
+    curs.execute(sql, [media_id])
+    reviews = curs.fetchall()
+
+    sql = "select title, media_type, director, artist, author from media where media_id = %s"
+    curs.execute(sql, [media_id])
+    media_info = curs.fetchone()
+    
+    #should we round this?
+    sql = "select avg(rating) as avg_rating from reviews where media_id = %s"
+    curs.execute(sql, [media_id])
+    avg_rating = curs.fetchone()
+    
+    result = {
+    "media": {
+        "title": media_info["title"],
+        "media_type": media_info["media_type"],
+        "director": media_info.get("director"),
+        "artist": media_info.get("artist"),
+        "author": media_info.get("author"),
+        "avg_rating": avg_rating,
+    },
+    "reviews": reviews,
+    }
+    return result
+def friends_render(conn, user_id):
+    curs = dbi.dict_cursor(conn)
+    sql = '''select users.username from users inner join friends on 
+        friends.friend_id = users.user_id where friends.user_id = %s
+        '''
+    curs.execute(sql, [user_id])
+    friendsResult = curs.fetchall()
+    return friendsResult
+
+

@@ -58,7 +58,7 @@ def login():
                 session['uid'] = result['user_id']
                 session['logged_in'] = True
                 session['visits'] = 1
-                return redirect(url_for('profile', username=username))
+                return redirect(url_for('profile', username=username, user_id = result['user_id']))
 
         except Exception as err:
             flash('form submission error'+str(err))
@@ -75,14 +75,13 @@ def profile(username):
     conn = dbi.connect()
     if request.method == 'GET':
         #select statements to display information about user
-        currentsResult,friendsResult,reviewsResult = f.profile_render(conn,
+        currentsResult,reviewsResult = f.profile_render(conn,
                                                                       session)
 
         return render_template('profile.html',
                                page_title='Profile',
                                username=username, currentsResult=currentsResult,
-                               friendsResult=friendsResult, 
-                               reviewsResult = reviewsResult)
+                               reviewsResult = reviewsResult, user_id = session.get("uid") )
     else:
         raise Exception('this cannot happen')
 
@@ -312,6 +311,23 @@ def review():
         f.insert_review(conn,media_id, session['uid'], review_text, rating)
         flash("Media reviewed")
         return redirect(url_for('profile', username=session['username']))
+    
+@app.route('/media/<int:media_id>')
+def media(media_id):
+    conn = dbi.connect()
+    result = f.media_page_render(conn, media_id)
+    person = result['media'].get("director") or result['media'].get("artist") or result['media'].get("author") or "Unknown"
+    return render_template('media.html', 
+                            page_title= result['media'].get('title'),
+                            result=result, person = person, media_id=media_id)
+@app.route('/friends/<int:user_id>')
+def friends(user_id):
+    conn = dbi.connect()
+    friendsResult = f.friends_render(conn, user_id)
+    return render_template('friends.html', 
+                            page_title= "My Friends",
+                            friendsResult=friendsResult)
+
 
 if __name__ == '__main__':
     import sys, os

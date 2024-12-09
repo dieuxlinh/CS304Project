@@ -2,20 +2,20 @@
 
 {% block main_content %}
 <div class="content-wrapper">
-    <h1>Welcome {{username}}!</h1>
+    <div class="button_header">
+        <h1>Welcome {{username}}!</h1>
+        <form method="get" action="{{ url_for('friends', user_id = user_id) }}">
+            <input type="submit" value="My Friends List">
+        </form>
+    </div>
     <p>Currents:</p>
     {% for curr in currentsResult %}
         <li>{{curr['title']}}</li>
     {% endfor %}
  
-    <p>Friends:</p>
-    {% for friend in friendsResult %}
-        <li>{{friend['username']}}</li>
-    {% endfor %}
- 
     <p>Reviews:</p>
     {% for review in reviewsResult %}
-        <li>{{review['title']}} {{review['rating']}}</li>
+        <li>{{review['title']}} - {{review['rating']}}</li>
         <p>{{review['review_text']}}</p>
     {% endfor %}
 
