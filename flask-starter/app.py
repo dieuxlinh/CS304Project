@@ -130,6 +130,9 @@ def newAcc():
             
             result = f.add_new_user(conn,username,password,email)
             
+            if result is None:
+                return render_template('createAccount.html',
+                               page_title='Create Account')
             #log in with inputted data
             session['username'] = username
             session['uid'] = result['user_id']
@@ -278,6 +281,7 @@ def review():
         return redirect(url_for('index'))
 
     conn = dbi.connect()
+
     if request.method == 'GET':
         tt = request.args.get('media_id')
         if tt:
@@ -328,6 +332,37 @@ def friends(user_id):
                             page_title= "My Friends",
                             friendsResult=friendsResult)
 
+@app.route('/current/<int:media_id>', methods = ["GET", "POST"])
+def currents(media_id):
+    conn = dbi.connect()
+    if request.method == "GET":
+        title = f.render_currents_form(conn,media_id)
+        return render_template('currents.html', 
+                            page_title= "Add to Currents",
+                            title=title, media_id = media_id)
+    else:
+        uid = session.get('uid')
+        progress = request.form["progress"]
+        f.add_to_currents(conn,uid,media_id,progress)
+        return redirect(url_for('profile', username=session.get("username")))
+
+@app.route('/updateCurrent/<int:media_id>', methods = ["GET"])
+def update_currents(media_id):
+    conn = dbi.connect()
+    new_progress = request.args.get('new_progress')
+    current_id = request.args.get('current_id')
+    result = f.update_current_progress(conn, new_progress, current_id)
+    if result is None:
+        return redirect(url_for('review_finished', media_id = media_id))
+    return redirect(url_for('profile', username=session.get("username")))
+
+@app.route('/review_finished/<int:media_id>')
+def review_finished(media_id):
+    conn = dbi.connect()
+    media = f.review_render(conn,media_id)
+    return render_template('review.html', 
+                            page_title='Review Media', 
+                            media_title = media['title'], media_id = media_id)
 
 if __name__ == '__main__':
     import sys, os

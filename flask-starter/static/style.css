@@ -122,4 +122,9 @@ html {
     .button_header h1{
         margin:0;
     }
+    .current-wrapper li {
+        display: flex; 
+        align-items: center; 
+        gap: 10px;
+    }
 }

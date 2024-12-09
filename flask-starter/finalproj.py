@@ -1,3 +1,5 @@
+from flask import (Flask, render_template, make_response, url_for, request,
+                   redirect, flash, session, send_from_directory, jsonify)
 import cs304dbi as dbi
 import bcrypt
 dbi.conf('recap_db')
@@ -26,7 +28,7 @@ def check_pass(stored, password):
 
 def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
-    sql = '''select media.title from currents inner join media using 
+    sql = '''select media.title, progress, media.media_id, current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
         '''
     curs.execute(sql, session['uid'])
@@ -59,12 +61,16 @@ def add_new_user(conn, username,password,email):
    # hash the inputted password and insert user into db
     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     stored = hashed.decode('utf-8')
-    sql = '''
-        insert into users (username, email, password_hash) values (%s,%s,%s)
-        '''
-    curs.execute(sql, [username, email, stored])
-    conn.commit()
-            
+    #thread safety
+    try:
+        sql = '''
+            insert into users (username, email, password_hash) values (%s,%s,%s)
+            '''
+        curs.execute(sql, [username, email, stored])
+        conn.commit()
+    except Exception as err:
+        flash('That username is taken: {}'.format(repr(err)))
+        return None
 
     sql = 'select user_id from users where username = %s'
     curs.execute(sql, username)
@@ -161,4 +167,29 @@ def friends_render(conn, user_id):
     friendsResult = curs.fetchall()
     return friendsResult
 
+def add_to_currents(conn,user_id,media_id, progress):
+    curs = dbi.dict_cursor(conn)
+    sql = "insert into currents (user_id, media_id, progress) values (%s,%s,%s)"
+    curs.execute(sql, [user_id,media_id, progress])
+    conn.commit()
+
+def render_currents_form(conn, media_id):
+    curs = dbi.dict_cursor(conn)
+    sql = "select title from media where media_id = %s"
+    curs.execute(sql, [media_id])
+    result = curs.fetchone()
+    return result
+
+def update_current_progress(conn, new_progress, current_id):
+    curs = dbi.dict_cursor(conn)
+    if int(new_progress) == 100:
+        flash("Yay you finished it!")
+        sql = "delete from currents where current_id = %s"
+        curs.execute(sql, int(current_id))
+        conn.commit()
+        return None
+    sql = "update currents set progress = %s where current_id = %s"
+    curs.execute(sql, [new_progress, int(current_id)])
+    conn.commit()
+    return True
 
