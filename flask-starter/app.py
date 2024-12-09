@@ -60,8 +60,8 @@ def login():
             if username == "" or password == "":
                 return render_template("login.html", page_title="Login")
 
-            #result contains the user_id of the person logged in or None if the
-            #login info was incorrect
+            #result contains the user_id of the person logged in or None/False 
+            # if the login info was incorrect
             result = f.check_login(conn, username, password)
 
             if result is None or result is False:
@@ -88,6 +88,7 @@ def login():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOADS'], filename)
 
+#route to user profile
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
 
@@ -99,6 +100,7 @@ def profile(username):
     
     conn = dbi.connect()
 
+    #additional security to verify username to backend resources
     if not f.validate_user(conn, uid, username):
             flash("Unauthorized access to profile.")
             return redirect(url_for("index"))
@@ -125,7 +127,6 @@ def profile(username):
         submit_action = request.form.get('submit')
 
         if submit_action == 'Upload':
-            print(submit_action)
             try:
                 #if no file is selected, flash message
                 fname = request.files['pfp'].filename
@@ -137,12 +138,20 @@ def profile(username):
                 pfp = request.files['pfp']
                 user_pic = pfp.filename
 
+                #check file type is compatible
                 ext = user_pic.split('.')[-1]
                 if ext not in ['jpg', 'jpeg', 'png']:
                     flash("""Incompatiable File Type. 
                           Please upload a .jpg, .jpeg, or .png file.""")
-                    return redirect(url_for('profile', username=username))
+                    return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, 
+                                currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
 
+                #create pathname for image
                 filename = secure_filename('{}.{}'.format(uid,ext))
                 pathname = os.path.join(app.config['UPLOADS'],filename)
                 pfp.save(pathname)
@@ -151,6 +160,8 @@ def profile(username):
                 f.insert_pic(conn, filename, uid)
                 flash('Upload successful')
 
+                currentsResult,reviewsResult,profilePic = f.profile_render(conn,
+                                                                session)
                 return render_template('profile.html',
                                 page_title='Profile',
                                 username=username, 
@@ -171,8 +182,11 @@ def profile(username):
             
         elif submit_action == "Delete":
             try:
+                #remove picture
                 f.delete_pic(conn, uid)
                 flash(f'Profile Picture Deleted')
+                currentsResult,reviewsResult,profilePic = f.profile_render(conn,
+                                                                session)
                 return render_template('profile.html',
                                 page_title='Profile',
                                 username=username, 
@@ -190,9 +204,7 @@ def profile(username):
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
-
-
-
+#logout functionality
 @app.route('/logout/')
 def logout():
     #remove data from session to log out
@@ -202,6 +214,7 @@ def logout():
     flash('You are logged out')
     return redirect(url_for('index'))
 
+#create account functionality
 @app.route("/CreateAccount/", methods=["GET", "POST"])
 def newAcc():
     if request.method == "GET":
@@ -214,6 +227,7 @@ def newAcc():
             username = request.form["username"]
             password = request.form["pass"]
 
+            #check all info is filled out
             if email == "":
                 flash("Please enter an email")
             if username == "":
@@ -226,18 +240,21 @@ def newAcc():
                 )
 
             conn = dbi.connect()
+            #check email is not already used by an account
             result = f.check_email(conn, email)
             if result:
                 flash("Email already associated with an account")
                 return redirect(url_for("login"))
-
+            
+            #check username is not already used by an account
             result = f.check_username(conn, username)
             if result:
                 flash("Username already in use")
                 return render_template(
                     "createAccount.html", page_title="Create Account"
                 )
-
+            #result either contains none if there is an issue with adding 
+            # the new user (includes thread safety) or the new users user_id
             result = f.add_new_user(conn, username, password, email)
 
             if result is None:
