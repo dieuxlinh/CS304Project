@@ -4,7 +4,7 @@
 <div class="content-wrapper">
 <h1>Welcome {{name}}</h1>
 
-<form method="post" action="">
+<form method="post" action="{{ url_for('login')}}">
     <p><label for="username">Please enter your 
             Username: </label><input type="text" name="username" id="username"></p>
     
