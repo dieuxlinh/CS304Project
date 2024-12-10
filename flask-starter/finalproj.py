@@ -1,3 +1,11 @@
+"""
+CS304 Final Project
+finalproj.py
+
+Written by: Ariel Moncrief, Linh Dinh, Sophie Thorpe
+"""
+
+# Module imports
 from flask import (
     Flask,
     render_template,
@@ -13,9 +21,11 @@ from flask import (
 import cs304dbi as dbi
 import bcrypt
 
+# Database connections
 dbi.conf("recap_db")
 
 
+# Check if a user exists and their password is correct
 def check_login(conn, username, password):
     curs = dbi.dict_cursor(conn)
     sql = "select user_id, password_hash from users where username = %s"
@@ -24,12 +34,14 @@ def check_login(conn, username, password):
     if result is None:
         return None
     else:
+        # Check if the password matches the stored hash
         if check_pass(result["password_hash"], password):
-            return result.get('user_id')
+            return result.get("user_id")
         else:
             return False
 
 
+# Verify if the input password matches the stored hash
 def check_pass(stored, password):
     hashed2 = bcrypt.hashpw(password.encode("utf-8"), stored.encode("utf-8"))
     hashed2_str = hashed2.decode("utf-8")
@@ -39,6 +51,7 @@ def check_pass(stored, password):
         return True
 
 
+# Render the user profile, including: current media list, their reviews, and their profile picture if uploaded
 def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
     sql = """select media.title, media_type, progress, media.media_id, 
@@ -55,40 +68,50 @@ def profile_render(conn, session):
     curs.execute(sql, session["uid"])
     reviewsResult = curs.fetchall()
 
-    sql = '''select profile_pic from users where users.user_id = %s '''
-    curs.execute(sql, session['uid'])
+    sql = """select profile_pic from users where users.user_id = %s """
+    curs.execute(sql, session["uid"])
     profilePic = curs.fetchone()
 
     return currentsResult, reviewsResult, profilePic
 
+
+# Insert or update the user's profile picture
 def insert_pic(conn, profile_pic, user_id):
     curs = dbi.cursor(conn)
     try:
-        curs.execute('''insert into users(user_id, profile_pic) values (%s,%s)
-                        on duplicate key update profile_pic = %s''',
-                     [user_id, profile_pic, profile_pic])
+        curs.execute(
+            """insert into users(user_id, profile_pic) values (%s,%s)
+                        on duplicate key update profile_pic = %s""",
+            [user_id, profile_pic, profile_pic],
+        )
         conn.commit()
-        print('Picture updated')
+        print("Picture updated")
     except Exception as err:
-        print('Exception on insert of {}: {}'.format(user_id, repr(err)))
+        print("Exception on insert of {}: {}".format(user_id, repr(err)))
 
+
+# Delete the user's profile picture
 def delete_pic(conn, user_id):
     curs = dbi.cursor(conn)
-    path = '/'
-    curs.execute('''update users set profile_pic = NULL
-                    where user_id = %s''',
-                 [user_id])
+    path = "/"
+    curs.execute(
+        """update users set profile_pic = NULL
+                    where user_id = %s""",
+        [user_id],
+    )
     conn.commit()
 
+
+# Check if an email is already associated with an account to prevent duplicates
 def check_email(conn, email):
     curs = dbi.dict_cursor(conn)
-    # check if email or username are alreay associated with an account
     sql = "select email from users where email = %s"
     curs.execute(sql, email)
     result = curs.fetchone()
     return result
 
 
+# Check if a username is already associated with an account to prevent duplicates
 def check_username(conn, username):
     curs = dbi.dict_cursor(conn)
     sql = "select username from users where username = %s"
@@ -97,12 +120,13 @@ def check_username(conn, username):
     return result
 
 
+# Add a new user to the database
 def add_new_user(conn, username, password, email):
     curs = dbi.dict_cursor(conn)
-    # hash the inputted password and insert user into db
+    # Hash the inputted password and insert user into db
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     stored = hashed.decode("utf-8")
-    # thread safety
+    # Thread safety
     try:
         sql = """
             insert into users (username, email, password_hash) 
@@ -120,6 +144,7 @@ def add_new_user(conn, username, password, email):
     return result
 
 
+# Insert a new media entry into the database
 def insert_media(conn, title, media_type, director, artist, author):
     curs = dbi.dict_cursor(conn)
     sql = """
@@ -130,6 +155,7 @@ def insert_media(conn, title, media_type, director, artist, author):
     conn.commit()
 
 
+# Retrieve details of any given media item so it can be updated
 def update_render(conn, media_id):
     curs = dbi.dict_cursor(conn)
     sql = """SELECT media_id,title, media_type, director, artist, author 
@@ -139,6 +165,7 @@ def update_render(conn, media_id):
     return media
 
 
+# Update the details/information of an existing media item
 def update_movie(conn, title, media_type, director, artist, author, media_id):
     curs = dbi.dict_cursor(conn)
     sql = """
@@ -151,6 +178,7 @@ def update_movie(conn, title, media_type, director, artist, author, media_id):
     conn.commit()
 
 
+# Search for a piece of media based on different features
 def search_render(conn, search_term):
     curs = dbi.dict_cursor(conn)
     search_param = f"%{search_term}%"
@@ -162,6 +190,7 @@ def search_render(conn, search_term):
     return results
 
 
+# Insert a new review for a media item
 def insert_review(conn, media_id, user_id, review_text, rating):
     curs = dbi.dict_cursor(conn)
     sql = """
@@ -172,6 +201,7 @@ def insert_review(conn, media_id, user_id, review_text, rating):
     conn.commit()
 
 
+# Retrieve media title based on the unique media_id
 def review_render(conn, media_id):
     curs = dbi.dict_cursor(conn)
     sql = "select title from media where media_id = %s"
@@ -180,6 +210,7 @@ def review_render(conn, media_id):
     return result
 
 
+# Render the media page, including reviews and media details
 def media_page_render(conn, media_id):
     curs = dbi.dict_cursor(conn)
     sql = """select users.username, reviews.review_text, reviews.rating from 
@@ -193,7 +224,6 @@ def media_page_render(conn, media_id):
     curs.execute(sql, [media_id])
     media_info = curs.fetchone()
 
-    # should we round this?
     sql = "select avg(rating) as avg_rating from reviews where media_id = %s"
     curs.execute(sql, [media_id])
     avg_rating = curs.fetchone()
@@ -212,6 +242,7 @@ def media_page_render(conn, media_id):
     return result
 
 
+# Render the user's friends list
 def friends_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
     sql = """select users.username from users inner join friends on 
@@ -221,6 +252,8 @@ def friends_render(conn, user_id):
     friendsResult = curs.fetchall()
     return friendsResult
 
+
+# Add a piece of media to the user's current progress list
 def add_to_currents(conn, user_id, media_id, progress):
     curs = dbi.dict_cursor(conn)
     sql = "insert into currents (user_id, media_id, progress) values (%s,%s,%s)"
@@ -228,6 +261,7 @@ def add_to_currents(conn, user_id, media_id, progress):
     conn.commit()
 
 
+# Render the form for tracking current media progres
 def render_currents_form(conn, media_id):
     curs = dbi.dict_cursor(conn)
     sql = "select title from media where media_id = %s"
@@ -236,6 +270,7 @@ def render_currents_form(conn, media_id):
     return result
 
 
+# Update the progress of media in the user's current list
 def update_current_progress(conn, new_progress, current_id):
     curs = dbi.dict_cursor(conn)
     if int(new_progress) == 100:
@@ -250,6 +285,7 @@ def update_current_progress(conn, new_progress, current_id):
     return True
 
 
+# Validate that a user exists with the specified unique user_id
 def validate_user(conn, uid, username):
     try:
         cursor = conn.cursor()
@@ -261,6 +297,8 @@ def validate_user(conn, uid, username):
     except Exception as e:
         raise RuntimeError(f"Error validating user: {e}")
 
+
+# Check if a media item is already in the user's currents list
 def check_currents(conn, user_id, media_id):
     curs = dbi.dict_cursor(conn)
     sql = "select current_id from currents where user_id = %s and media_id = %s"
