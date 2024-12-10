@@ -104,11 +104,9 @@ def profile(username):
     if not f.validate_user(conn, uid, username):
             flash("Unauthorized access to profile.")
             return redirect(url_for("index"))
-
     #select statements to display information about user
     currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                 session)
-
     if request.method == 'GET':
         try:
             return render_template('profile.html',
@@ -132,8 +130,17 @@ def profile(username):
                 fname = request.files['pfp'].filename
                 if 'pfp' not in request.files or fname == '':
                     flash('No selected file')
-                    return redirect(url_for('profile', username=username))
-                
+                    currentsResult,reviewsResult,profilePic = f.profile_render(
+                                                                conn,
+                                                                session)
+                    return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, 
+                                currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
+            
                 #change file name and create file path
                 pfp = request.files['pfp']
                 user_pic = pfp.filename
@@ -204,6 +211,34 @@ def profile(username):
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
+        elif submit_action == 'Update':
+            try:
+                new_progress = request.form.get("new_progress")
+                current_id = request.form.get("current_id")
+                media_id = request.form.get("media_id")
+                print("here")
+                result = f.update_current_progress(conn, new_progress, current_id)
+                if result is None:
+                    return redirect(url_for("review_finished", media_id=media_id))
+                currentsResult,reviewsResult,profilePic = f.profile_render(conn,
+                                                                session)
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, 
+                                currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
+            except Exception as err:
+                flash(f'Error deleting movie: {err}')
+                return render_template('profile.html',
+                                page_title='Profile',
+                                username=username, 
+                                currentsResult=currentsResult, 
+                                reviewsResult = reviewsResult,
+                                user_id = session.get("uid"),
+                                profilePic = profilePic)
+
 #logout functionality
 @app.route('/logout/')
 def logout():
@@ -508,16 +543,6 @@ def currents(media_id):
         progress = request.form["progress"]
         f.add_to_currents(conn, uid, media_id, progress)
         return redirect(url_for("profile", username=session.get("username")))
-
-@app.route("/updateCurrent/<int:media_id>", methods=["GET"])
-def update_currents(media_id):
-    conn = dbi.connect()
-    new_progress = request.args.get("new_progress")
-    current_id = request.args.get("current_id")
-    result = f.update_current_progress(conn, new_progress, current_id)
-    if result is None:
-        return redirect(url_for("review_finished", media_id=media_id))
-    return redirect(url_for("profile", username=session.get("username")))
 
 @app.route("/review_finished/<int:media_id>")
 def review_finished(media_id):
