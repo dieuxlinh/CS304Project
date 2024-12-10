@@ -185,7 +185,7 @@ def newAcc():
             flash("form submission error" + str(err))
             return redirect(url_for("index"))
 
-#insert media functionality
+#Ariel starts here
 @app.route("/insert_media/", methods=["GET", "POST"])
 def insert_media():
     uid = session.get("uid")
@@ -206,15 +206,12 @@ def insert_media():
                                page_title="Insert Media")
 
     elif request.method == "POST":
-        #get media values using form
         title = request.form["title"]
         media_type = request.form["media_type"]
         director = request.form["director"]
         artist = request.form["artist"]
         author = request.form["author"]
-
         # check all necessary inputs are filled out
-        #if not, prompt user and re-render
         if title == "":
             flash("Please enter a title")
         if media_type == "":
@@ -226,7 +223,6 @@ def insert_media():
             or media_type == ""
             or (director == "" and artist == "" and author == "")
         ):
-            #pass empty media values
             media = {
                 "media_id": "",
                 "title": "",
@@ -241,7 +237,6 @@ def insert_media():
 
         try:
             conn = dbi.connect()
-            #add media to the datase and redirect
             f.insert_media(conn, title, media_type, director, artist, author)
             flash("Media successfully inserted")
             return redirect(url_for("index"))
@@ -250,7 +245,7 @@ def insert_media():
             flash(f"Error inserting media: {str(err)}")
             return redirect(url_for("index"))
 
-#updating media functionality
+
 @app.route("/update_media/<int:media_id>/", methods=["GET", "POST"])
 def update_media(media_id):
 
@@ -258,22 +253,18 @@ def update_media(media_id):
 
     if not uid:
         return redirect(url_for("index"))
-    
     conn = dbi.connect()
-
     if request.method == "GET":
-        # get current media data needed for update
-        #if no media, redirect
+        # Current media data
         media = f.update_render(conn, media_id)
         if not media:
             flash("Media not found")
             return redirect(url_for("index"))
-        
         return render_template("update.html", media=media, 
                                page_title="Update Media")
 
     elif request.method == "POST":
-        # get media form data
+        # Form data
         title = request.form["title"]
         media_type = request.form["media_type"]
         director = request.form["director"]
@@ -281,9 +272,9 @@ def update_media(media_id):
         author = request.form["author"]
 
         try:
-            #update media data using form data
             f.update_movie(conn, title, media_type, director, artist, author, 
                            media_id)
+
             flash("Media successfully updated")
             return redirect(url_for("index"))
 
@@ -291,14 +282,13 @@ def update_media(media_id):
             flash(f"Error updating media: {str(err)}")
             return redirect(url_for("index"))
 
-#search media functionality
+
 @app.route("/search/", methods=["GET"])
 def search():
     uid = session.get("uid")
 
     if not uid:
         return redirect(url_for("index"))
-    
     # Request the inputed search term from the form
     search_term = request.args.get("search_media")
 
@@ -316,7 +306,7 @@ def search():
             page_title="Search",
         )
 
-#display search functionality
+
 @app.route("/search/<search_term>", methods=["GET"])
 def search_result(search_term):
     conn = dbi.connect()
@@ -337,7 +327,7 @@ def search_result(search_term):
         page_title="Search Results",
     )
 
-#write a review functionality
+
 @app.route("/review/", methods=["GET", "POST"])
 def review():
     uid = session.get("uid")
@@ -349,11 +339,7 @@ def review():
     conn = dbi.connect()
 
     if request.method == "GET":
-        #get the media tt
         tt = request.args.get("media_id")
-
-        #with media tt, get media title
-        #if none, set to blank and re-render
         if tt:
             media = f.review_render(conn, tt)
         else:
@@ -368,14 +354,13 @@ def review():
         )
 
     elif request.method == "POST":
-        # get form data
+        # Form data
         title = request.form["title"]
         review_text = request.form["review"]
         rating = request.form["Rating"]
         media_id = request.form["media_id"]
 
         # make sure all form data is filled out
-        #else prompt user
         if title == "":
             flash("Please enter a title")
         if review_text == "":
@@ -385,17 +370,13 @@ def review():
         if title == "" or review_text == "" or rating == "":
             return render_template("review.html", page_title="Review Media")
 
-        #add a review 
         f.insert_review(conn, media_id, session["uid"], review_text, rating)
         flash("Media reviewed")
         return redirect(url_for("profile", username=session["username"]))
 
-#display media functionality
 @app.route("/media/<int:media_id>")
 def media(media_id):
     conn = dbi.connect()
-
-    #get data for media page
     result = f.media_page_render(conn, media_id)
     person = (
         result["media"].get("director")
@@ -411,30 +392,22 @@ def media(media_id):
         media_id=media_id,
     )
 
-#friends list functionality
 @app.route("/friends/<int:user_id>")
 def friends(user_id):
     conn = dbi.connect()
-
-    #get user friends data
     friendsResult = f.friends_render(conn, user_id)
     return render_template(
         "friends.html", page_title="My Friends", friendsResult=friendsResult
     )
 
-#current media fuctionality
 @app.route("/current/<int:media_id>", methods=["GET", "POST"])
 def currents(media_id):
     conn = dbi.connect()
     uid = session.get("uid")
     if request.method == "GET":
-        #check if media already in current
-        #does not allow for duplicate media in current
         result = f.check_currents(conn,uid,media_id)
         if result is None:
             return redirect(url_for(('index')))
-        
-        #get the title of the media
         title = f.render_currents_form(conn, media_id)
         return render_template(
             "currents.html",
@@ -443,33 +416,13 @@ def currents(media_id):
             media_id=media_id,
         )
     else:
-        #get progress from user and add progress
         progress = request.form["progress"]
         f.add_to_currents(conn, uid, media_id, progress)
         return redirect(url_for("profile", username=session.get("username")))
 
-<<<<<<< Updated upstream
-=======
-#update user's currents functionality
-@app.route("/updateCurrent/<int:media_id>", methods=["GET"])
-def update_currents(media_id):
-    conn = dbi.connect()
-
-    #get and update user's progress for media
-    new_progress = request.args.get("new_progress")
-    current_id = request.args.get("current_id")
-    result = f.update_current_progress(conn, new_progress, current_id)
-    if result is None:
-        return redirect(url_for("review_finished", media_id=media_id))
-    return redirect(url_for("profile", username=session.get("username")))
-
-#when finished media, review media
->>>>>>> Stashed changes
 @app.route("/review_finished/<int:media_id>")
 def review_finished(media_id):
     conn = dbi.connect()
-
-    #get media data
     media = f.review_render(conn, media_id)
     return render_template(
         "review.html",
