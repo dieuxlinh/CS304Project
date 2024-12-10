@@ -271,4 +271,3 @@ def check_currents(conn, user_id, media_id):
         return None
     else:
         return True
-    
