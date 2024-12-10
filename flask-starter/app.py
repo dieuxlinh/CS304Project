@@ -431,6 +431,7 @@ def review_finished(media_id):
         media_id=media_id,
     )
 
+#extra security to validate login
 def validate_user_session(conn, uid, username):
     if not uid:
         flash("Please log in to access your profile.")
@@ -440,6 +441,7 @@ def validate_user_session(conn, uid, username):
             flash("Unauthorized access to profile.")
             return redirect(url_for("index"))
 
+#redners the profile page
 def render_profile_page(conn, username, currentsResult, reviewsResult, profilePic):
         try:
             return render_template('profile.html',
@@ -454,6 +456,7 @@ def render_profile_page(conn, username, currentsResult, reviewsResult, profilePi
             flash("An error occurred while loading the profile.")
             return redirect(url_for("index"))
 
+#functionality to handle profile pic upload
 def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username):
             try:
                 #if no file is selected, flash message
@@ -497,6 +500,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                                 user_id = session.get("uid"),
                                 profilePic = profilePic)
 
+#functionality to handle the deleting of a profile pic
 def handle_delete(conn, uid, username, currentsResult, reviewsResult, profilePic):
             try:
                 #remove picture
@@ -509,12 +513,14 @@ def handle_delete(conn, uid, username, currentsResult, reviewsResult, profilePic
             except Exception as err:
                 flash(f'Error deleting movie: {err}')
                 return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
-            
+
+#functionality to handle updating the progress of something in currents          
 def handle_update_progress(conn,username):
             try:
                 new_progress = request.form.get("new_progress")
                 current_id = request.form.get("current_id")
                 media_id = request.form.get("media_id")
+                #result contains None if currents progress = 100%
                 result = f.update_current_progress(conn, new_progress, current_id)
                 if result is None:
                     return redirect(url_for("review_finished", media_id=media_id))

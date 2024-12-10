@@ -54,6 +54,7 @@ def check_pass(stored, password):
 # Render the user profile, including: current media list, their reviews, and their profile picture if uploaded
 def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
+    #get currents information
     sql = """select media.title, media_type, progress, media.media_id, 
         current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
@@ -61,6 +62,7 @@ def profile_render(conn, session):
     curs.execute(sql, session["uid"])
     currentsResult = curs.fetchall()
 
+    #get reviews information
     sql = """select media.title, media.media_type, reviews.rating, 
         reviews.review_text from media inner join reviews using (media_id) 
         where reviews.user_id = %s
@@ -93,7 +95,6 @@ def insert_pic(conn, profile_pic, user_id):
 # Delete the user's profile picture
 def delete_pic(conn, user_id):
     curs = dbi.cursor(conn)
-    path = "/"
     curs.execute(
         """update users set profile_pic = NULL
                     where user_id = %s""",
@@ -213,12 +214,14 @@ def review_render(conn, media_id):
 # Render the media page, including reviews and media details
 def media_page_render(conn, media_id):
     curs = dbi.dict_cursor(conn)
+    #get reviews
     sql = """select users.username, reviews.review_text, reviews.rating from 
             reviews join users on reviews.user_id = users.user_id 
             where reviews.media_id = %s"""
     curs.execute(sql, [media_id])
     reviews = curs.fetchall()
 
+    #get media info
     sql = """select title, media_type, director, artist, author from media 
             where media_id = %s"""
     curs.execute(sql, [media_id])
