@@ -292,6 +292,7 @@ def search():
 
     if not uid:
         return redirect(url_for("index"))
+    
     # Request the inputed search term from the form
     search_term = request.args.get("search_media")
 
@@ -314,18 +315,23 @@ def search():
 def search_result(search_term):
     conn = dbi.connect()
 
+
     uid = session.get("uid")
 
     if not uid:
         return redirect(url_for("index"))
+    
+    #get the search type
+    search_type = request.args.get("search_type")
 
     # Query for finding the search_term in the media table
-    results = f.search_render(conn, search_term)
+    results = f.search_render(conn, search_term, search_type)
 
     return render_template(
         "display-search.html",
         results=results,
         search_term=search_term,
+        search_type=search_type,
         searched=True,
         page_title="Search Results",
     )

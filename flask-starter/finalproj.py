@@ -180,13 +180,22 @@ def update_movie(conn, title, media_type, director, artist, author, media_id):
 
 
 # Search for a piece of media based on different features
-def search_render(conn, search_term):
+def search_render(conn, search_term, search_type):
     curs = dbi.dict_cursor(conn)
     search_param = f"%{search_term}%"
-    sql = """select media_id, title, media_type from media 
+    param = [search_param]
+    
+    #query handles if there is or is not a search fileter
+    if search_type:
+        sql = """select media_id, title, media_type from media 
+            WHERE title like %s and media_type = %s
+            """
+        param.append(search_type)
+    else:
+        sql = """select media_id, title, media_type from media 
             WHERE title like %s
-        """
-    curs.execute(sql, search_param)
+            """
+    curs.execute(sql, param)
     results = curs.fetchall()
     return results
 
