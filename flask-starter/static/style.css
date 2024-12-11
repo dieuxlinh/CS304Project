@@ -1,78 +1,130 @@
-/* the --color-header and others are CSS variables, which we access later. 
-*/
-
-HTML {
-    --color-header: #007ea9;  /* color for H1-H6 and others. was deepskyblue but poor contrast. */
-    --color-hilite: #b50000;  /* was red, but this avoids WAVE contrast errors */ 
-    --color-focus: #56B929;
-    --font-family: Verdana;
-    font-family: var(--font-family)
-}
-
-/* For flashed messages; make them stand out using red and italics */
-
-#messages {
-    color: var(--color-hilite);
-    font-style: italic;
-}
-
-
-h1 {
-    font-size: 200%;
-    color: var(--color-header);
-}
-
-h2, h3 {
-    color: var(--color-header);
-}
-    
-
-/* for a simple navbar. Talk to Scott if you want drop-downs. */
-nav > ul {
-    display: flex;
-    flex-direction: row;
-}
-
-nav ul {
-    list-style-type: none;
-    margin: 0px;
-    padding: 0px;
-}
-
-nav > ul > li {
-    flex: 0 0 auto;
-    width: 15em; 
-}
-
-nav button, nav a {
-    display: block;
-    box-sizing: border-box; /* easier to make button and A the same size */
-    width: 100%;
-    height: 40px;
-    padding: 0px;
-    padding-bottom: 5px;
-    background-color: var(--color-header); /* was #3498db */
-    border: 2px solid black;
-    border-radius: 5px;
-    cursor: pointer;
-    /* Firefox uses font -apple-system unless I repeat the font spec here. */
+html {
+    --color-header: #79050a;
+    --color-hilite: #c62027;
+    --color-focus: #cf898c; 
+    --color-background: #f9dfe0; 
+    --color-nav-bg: #fdc9c9;
+    --color-border: #c62027;
+    --font-family: 'Verdana', sans-serif;
     font-family: var(--font-family);
-    font-weight: bold;
-    font-size: 1.4rem;
+    background-color: var(--color-background); 
+    color: #000; 
+
+    body {
+        margin: 0;
+        font-family: var(--font-family);
+        line-height: 1.6;
+    }
+
+    #messages {
+        color: var(--color-hilite);
+        font-style: italic;
+        padding: 10px;
+        border: 1px solid var(--color-border);
+        background-color: rgba(198, 32, 39, 0.1);
+        border-radius: 5px;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        color: var(--color-header);
+        text-transform: uppercase;
+    }
+
+    h2, h3 {
+        color: var(--color-header);
+        font-weight: bold;
+    }
+
+    nav {
+        margin: 0;
+        background-color: var(--color-nav-bg);
+        border-bottom: 2px solid var(--color-border);
+        padding: 10px 0;
+    }
+
+    nav > ul {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    nav ul {
+        padding: 0;
+    }
+
+    nav > ul > li {
+        flex: 0 0 auto;
+        width: auto;
+        margin: 0 10px;
+    }
+
+    nav button, nav a {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px 20px;
+        background-color: var(--color-header);
+        color: #fff;
+        border: 2px solid var(--color-border);
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        font-family: var(--font-family);
+        font-weight: bold;
+        font-size: 1rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    nav > ul > li > button, nav > ul > li > a {
+        text-align: center;
+    }
+
+    nav li.right {
+        margin-left: auto;
+    }
+
+    nav button:hover, nav button:focus, nav a:hover, nav a:focus {
+        background-color: var(--color-focus);
+        color: #000; 
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        nav > ul {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        nav > ul > li {
+            width: 100%;
+        }
+
+        nav button, nav a {
+            width: 90%;
+            margin: 5px auto;
+        }
+    }
+    .content-wrapper {
+        margin: 10px; /* Adds margin for the rest of the content */
+    }
+    .button_header{
+        display:flex;
+        align-items: center;
+        justify-content: space-between;
+        width:100%;
+        margin-bottom: 0;
+    }
+    .button_header h1{
+        margin:0;
+    }
+    .current-wrapper li {
+        display: flex; 
+        align-items: center; 
+        gap: 10px;
+    }
 }
-
-/* Only the top-level buttons are centered; lower ones are left-aligned. */
-nav > ul > li > button , nav > ul > li > a {
-    text-align: center;
-}
-
-/* because of the margin trick, this can only be used for the last element */
-
-nav li.right {
-    margin-left: auto;
-}
-
-nav button:hover, button:focus, nav a:hover, nav a:focus {
-    background-color: var(--color-focus);
-}
-

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<div class="content-wrapper">
+<h1>Review Media </h1>
+
+<form action="{{ url_for('review') }}" method="post">
+    <input type="hidden" name="media_id" value="{{media_id}}">
+    <label for="title">Title:</label>
+    <input type="text" name="title" id="title" value="{{media_title}}"><br><br>
+        
+    <label for="review">Review Text:</label>
+    <input type="text" name="review" id="review" value="{{media_review}}"><br><br>
+
+    <label for="Rating">Rating (1-10):</label>
+    <input type="number" name="Rating" id="Rating" value="{{media_rating}}" min = "1" max="10"><br><br>
+
+    <button type="submit">Review</button>
+</form>
+</div>
+
+{% endblock %}

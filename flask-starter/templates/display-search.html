@@ -1,26 +1,37 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Search Results</h1>
 
-<form action="{{ url_for('display_media')}}" method="get">
-
-    <p><label for="search">Search for Media</label>
-        <input id="search" type = "text" name="search-media" value = "">
-    </p>
-    <button type="submit" value="">Search</button>>
+<form action="{{ url_for('search') }}" method="get">
+        <label for="search">Search for Media:</label>
+        <input id="search" type="text" name="search_media" 
+        value="{{ search_term | default('') }}">
+        <select id="search" name="search_type">
+            <option value="">select</option>
+                <option value="Movie">Movie</option>
+                <option value="Book">Book</option>
+                <option value="Music">Song</option>
+        </select>
+    <button type="submit">Search</button>
 </form>
 
 <section>
-{%if media}%
-    <ul> 
-        {%for media in results%}
-            <li> {{media}}</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No results found.</p>
-{% endif %}
-</section> 
-
+    {% if results %}
+        <ul>
+            {% for media in results %}
+            <form method="get" action="{{url_for('review')}}">
+                <input type="hidden" name="media_id" value="{{media.media_id}}">
+                <li><a href = "{{url_for('media', media_id = media.media_id)}}">{{ media.title}} ({{media.media_type}})</a>
+                    <input type="submit" value="review this">
+                </li>
+            </form>
+            {% endfor %}
+        </ul>
+    {% elif searched %}
+        <p>No results found.</p>
+    {% endif %}
+</section>
+</div>
 {% endblock %}

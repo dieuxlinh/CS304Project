@@ -1,0 +1,662 @@
+from flask import (Flask, render_template, make_response, url_for, request,
+                   redirect, flash, session, send_from_directory, jsonify)
+from werkzeug.utils import secure_filename
+app = Flask(__name__)
+
+# one or the other of these. Defaults to MySQL (PyMySQL)
+# change comment characters to switch to SQLite
+
+import cs304dbi as dbi
+#import cs304dbi_sqlite3 as dbi
+
+import secrets
+import bcrypt
+
+app.secret_key = 'your secret here'
+# replace that with a random key
+app.secret_key = secrets.token_hex()
+
+# This gets us better error messages for certain common request errors
+app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+
+@app.route('/')
+def index():
+    return render_template('main.html',
+                           page_title='Home')
+
+
+@app.route('/login/', methods=["GET", "POST"])
+def login():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    if request.method == 'GET':
+        return render_template('login.html',
+                               page_title='Login')
+    else:
+        try:
+            username = request.form['username']
+            password = request.form['pass'] 
+            if username == "":
+                flash("Please enter a username")
+            if password == "":
+                flash("Please enter a password")
+            if username == "" or password == "":
+                return render_template('login.html',
+                               page_title='Login')
+            
+            sql = "select user_id, password_hash from users where username = %s"
+            curs.execute(sql, username)
+            result = curs.fetchone()
+
+            #result is none where username does not exist in db yet
+            if result is None:
+                flash('Incorrect login')
+                return render_template('login.html',
+                               page_title='Login')
+            
+            #determine if inputted password is the correct one
+            stored = result['password_hash']
+
+            hashed2 = bcrypt.hashpw(password.encode('utf-8'), 
+                                    stored.encode('utf-8'))
+            hashed2_str = hashed2.decode('utf-8')
+
+            if(hashed2_str != stored):
+                flash('Incorrect password')
+                return render_template('login.html',
+                               page_title='Login')
+            else:
+                flash('successfully logged in as ' + username)
+                #add log in info to session
+                session['username'] = username
+                session['uid'] = result['user_id']
+                session['logged_in'] = True
+                session['visits'] = 1
+                return redirect(url_for('profile', username=username))
+
+        except Exception as err:
+            flash('form submission error'+str(err))
+            return redirect(url_for('login') )
+
+@app.route('/profile/<username>', methods=['GET','POST'])
+def profile(username):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    if request.method == 'GET':
+        #select statements to display information about user
+        sql = '''select media.title from currents inner join media using 
+        (media_id) where currents.user_id = %s
+        '''
+        curs.execute(sql, session['uid'])
+        currentsResult = curs.fetchall()
+        
+        sql = '''select users.username from users inner join friends on 
+        friends.friend_id = users.user_id where friends.user_id = %s
+        '''
+        curs.execute(sql, session['uid'])
+        friendsResult = curs.fetchall()
+
+        sql = '''select media.title, reviews.rating, reviews.review_text from 
+        media inner join reviews using (media_id) where reviews.user_id = %s
+        '''
+        curs.execute(sql, session['uid'])
+        reviewsResult = curs.fetchall()
+
+        return render_template('profile.html',
+                               page_title='Profile',
+                               username=username, currentsResult=currentsResult,
+                                friendsResult=friendsResult, 
+                                reviewsResult = reviewsResult)
+    else:
+        raise Exception('this cannot happen')
+
+@app.route('/logout/')
+def logout():
+    #remove data from session to log out
+    session.pop('username')
+    session.pop('uid')
+    session.pop('logged_in')
+    flash('You are logged out')
+    return redirect(url_for('index'))
+
+@app.route('/CreateAccount/', methods=['GET','POST'])
+def newAcc():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    if request.method == 'GET':
+        return render_template('createAccount.html',
+                               page_title='Create Account')
+    else:
+        try:
+            #get information from form
+            email = request.form['email']
+            username = request.form['username']
+            password = request.form['pass'] 
+            
+            if email == "":
+                flash("Please enter an email")
+            if username == "":
+                flash("Please enter a username")
+            if password == "":
+                flash("Please enter a password")
+            if email == "" or username == "" or password == "":
+                return render_template('createAccount.html',
+                               page_title='Create Account')
+            
+            #check if email or username are alreay associated with an account
+            sql = "select * from users where email = %s"
+            curs.execute(sql, email)
+            result = curs.fetchone()
+            if result:
+                flash("Email already associated with an account")
+                return redirect (url_for('login'))
+            
+            sql = "select * from users where username = %s"
+            curs.execute(sql, username)
+            result = curs.fetchone()
+            if result:
+                flash("Username already in use")
+                return render_template('createAccount.html',
+                               page_title='Create Account')
+            
+            #hash the inputted password and insert user into db
+            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            stored = hashed.decode('utf-8')
+            sql = '''
+            insert into users (username, email, password_hash) values (%s,%s,%s)
+            '''
+            curs.execute(sql, [username, email, stored])
+            conn.commit()
+            session['username'] = username
+
+            sql = 'select user_id from users where username = %s'
+            curs.execute(sql, username)
+            result = curs.fetchone()
+            
+            #log in with inputted data
+            session['uid'] = result['user_id']
+            session['logged_in'] = True
+            session['visits'] = 1
+            flash('Account created successfully')
+            
+            return redirect(url_for('profile', username=username))
+
+        except Exception as err:
+            flash('form submission error'+str(err))
+            return redirect( url_for('index') )
+
+@app.route('/insert_media/', methods=["GET", "POST"])
+def insert_media():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+
+    if request.method == 'GET':
+        # Pass empty values or defaults to the template
+        media = {
+            'title': '',
+            'media_type': '',
+            'director': '',
+            'artist': '',
+            'author': ''
+        }
+        return render_template('insert.html', media=media, 
+                               page_title='Insert Media')
+
+    elif request.method == 'POST':
+        title = request.form['title']
+        media_type = request.form['media_type']
+        director = request.form['director']
+        artist = request.form['artist']
+        author = request.form['author']
+        #check all necessary inputs are filled out
+        if title == "":
+                flash("Please enter a title")
+        if media_type == "":
+            flash("Please enter a media type")
+        if director == "" and artist == "" and author == "":
+            flash("Please enter a director/artist/author")
+        if title == "" or media_type == "" or (director == "" and artist == "" 
+                                               and author == ""):
+            media = {
+            'media_id': '',
+            'title': '',
+            'media_type': '',
+            'director': '',
+            'artist': '',
+            'author': ''
+            }
+            return render_template('insert.html', media=media,
+                               page_title='Insert Media')
+
+        try:
+            #insert media info into db
+            sql = """
+                INSERT INTO media (title, media_type, director, artist, author)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            curs.execute(sql, (title, media_type, director, artist, author))
+            conn.commit()
+
+            flash('Media successfully inserted')
+            return redirect(url_for('index'))
+
+        except Exception as err:
+            flash(f"Error inserting media: {str(err)}")
+            return redirect(url_for('index'))
+
+
+@app.route('/update_media/<int:media_id>/', methods=["GET", "POST"])
+def update_media(media_id):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+
+    if request.method == 'GET':
+        # Current media data
+        sql = 'SELECT * FROM media WHERE media_id = %s'
+        curs.execute(sql, (media_id,))
+        media = curs.fetchone()
+
+        if not media:
+            flash('Media not found')
+            return redirect(url_for('index'))
+        return render_template('update.html', media=media, 
+                               page_title='Update Media')
+
+    elif request.method == 'POST':
+        # Form data
+        title = request.form['title']
+        media_type = request.form['media_type']
+        director = request.form['director']
+        artist = request.form['artist']
+        author = request.form['author']
+
+        try:
+            sql = """
+                UPDATE media
+                SET title = %s, media_type = %s, director = %s, artist = %s, 
+                author = %s
+                WHERE media_id = %s
+            """
+            curs.execute(sql, (title, media_type, director, artist, author, 
+                               media_id))
+            conn.commit()
+
+            flash('Media successfully updated')
+            return redirect(url_for('index'))
+
+        except Exception as err:
+            flash(f"Error updating media: {str(err)}")
+            return redirect(url_for('index'))
+
+@app.route('/search/', methods=["GET"])
+def search():
+
+    #Request the inputed search term from the form
+    search_term = request.args.get('search_media')
+
+    #if searchterm is not null, redirect the search_result
+    #else, re-render the template
+    if search_term and search_term != " ":
+        return redirect(url_for('search_result', search_term=search_term))
+    else:
+        flash("Please enter something in the search bar")
+        return render_template('display-search.html', results=None, 
+                               search_term='', searched = False)
+
+@app.route('/search/<search_term>', methods=["GET"])
+def search_result(search_term):
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    
+    #Query for finding the search_term in the media table
+    search_param = f"%{search_term}%"
+    sql = '''select * from media WHERE title like %s'''
+    curs.execute(sql, search_param)
+    results = curs.fetchall()
+
+    return render_template('display-search.html', results=results, 
+                           search_term=search_term, searched = True)
+
+@app.route('/review/', methods=['GET','POST'])
+def review():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    if request.method == 'GET':
+        return render_template('review.html', 
+                               page_title='Review Media')
+
+    elif request.method == 'POST':
+        # Form data
+        title = request.form['title']
+        review_text = request.form['review']
+        rating = request.form['Rating']
+
+        #make sure all form data is filled out
+        if title == "":
+                flash("Please enter a title")
+        if review_text == "":
+            flash("Please enter a review")
+        if rating == "":
+            flash("Please enter a rating")
+        if title == "" or review_text == "" or rating == "":
+            return render_template('review.html', 
+                               page_title='Review Media')
+        #get id for media (will prob be changed later)
+        sql = """
+        select media_id from media where title = %s
+        """
+        curs.execute(sql, [title])
+        result = curs.fetchone()
+        if result:
+            #insert review
+            sql = """
+                INSERT INTO reviews (media_id, user_id, review_text, rating) 
+                VALUES (%s, %s, %s, %s)
+                """
+            curs.execute(sql, [result['media_id'], session["uid"], 
+            review_text, rating])
+            conn.commit()
+            flash("Media reviewed")
+            return redirect(url_for('profile', username=session['username']))
+        else:
+            #If media doesnt exist yet in db get redirected
+            flash("This media has not been inserted")
+            return redirect(url_for('insert_media'))
+if __name__ == '__main__':
+    import sys, os
+    if len(sys.argv) > 1:
+        # arg, if any, is the desired port number
+        port = int(sys.argv[1])
+        assert(port>1024)
+    else:
+        port = os.getuid()
+    # set this local variable to 'wmdb' or your personal or team db
+    db_to_use = 'recap_db' 
+    print(f'will connect to {db_to_use}')
+    dbi.conf(db_to_use)
+    app.debug = True
+    app.run('0.0.0.0',port)
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <!-- for mobile-friendly pages -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name=author content="Linh, Ariel, Sophie">
+    <title>{{page_title}}</title>
+    <link rel='stylesheet' href="{{url_for('static', filename = 'style.css')}}">
+    {% block head_stuff %} {% endblock %}
+</head>
+<body>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div id="messages">
+    {% for msg in messages %}
+    <p class="flash-message">{{ msg }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  
+  {% if session['logged_in'] %}
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('profile', username=session['username']) }}">
+          Profile</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        <li><a href = "{{ url_for('insert_media')}}">Insert Media</a></li>
+        <li><a href = "{{ url_for('search')}}">Search</a></li>
+        <li><a href = "{{ url_for('review')}}">Review Media</a></li>
+      </ul>
+    </nav>
+  {% else %}
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+      </ul>
+    </nav>  
+  {% endif %}
+
+  {% block main_content %}
+  {% endblock %}
+    
+  </body>
+  </html>{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Welcome {{name}}</h1>
+
+<form method="POST" action= "{{ url_for('newAcc') }}" >
+    <p>Please enter your <label for="email">
+        email: <input type="text" name="email">
+    </label></p>
+    <p>Please enter a <label for="username">
+            username: <input type="text" name="username">
+    </label></p>
+    <p>Please enter a <label for ="pass">password: <input type = "text" name="pass"></label></p>
+    <input type="submit" name="submit" value="Create Account">
+</form>
+
+{% endblock %}{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Search Results</h1>
+
+<form action="{{ url_for('search') }}" method="get">
+    <p>
+        <label for="search">Search for Media</label>
+        <input id="search" type="text" name="search_media" 
+        value="{{ search_term | default('') }}">
+    </p>
+    <button type="submit">Search</button>
+</form>
+
+<section>
+    {% if results %}
+        <ul>
+            {% for media in results %}
+                <li><a href = "{{url_for('update_media', media_id = media.media_id)}}">{{ media.title}}</a></li>
+            {% endfor %}
+        </ul>
+    {% elif searched %}
+        <p>No results found.</p>
+    {% endif %}
+</section>
+
+{% endblock %}{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Insert Media </h1>
+
+<form action="{{ url_for('insert_media', media_id=media['media_id']) }}" method="post">
+    
+    <label for="title">Title:</label>
+    <input type="text" name="title" id="title" value="{{ media['title'] }}"><br><br>
+        
+    <label for="media_type">Media Type 'movie', 'song', 'book':</label>
+    <input type="enum" name="media_type" id="media_type" value="{{ media['media_type'] }}"><br><br>
+
+    <label for="director">Director:</label>
+    <input type="text" name="director" id="director" value="{{ media['director'] or '' }}"><br><br>
+
+    <label for="artist">Artist:</label>
+    <input type="text" name="artist" id="artist" value="{{ media['artist'] or '' }}"><br><br>
+
+    <label for="author">Author:</label>
+    <input type="text" name="author" id="author" value="{{ media['author'] or '' }}"><br><br>
+
+    <button type="submit">Insert</button>
+</form>
+
+{% endblock %}
+{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Welcome {{name}}</h1>
+
+<form method="post" action="">
+    <p>Please enter your <label for="username">
+            Username: <input type="text" name="username">
+    </label></p>
+    <p>Please enter your <label for ="pass">Password: <input type = "text" name="pass"></label></p>
+    <p><input type="submit" name="submit" value="Login"> <a href = "{{ url_for('newAcc')}}">Create new account</a></p>
+</form>
+
+{% endblock %}{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Welcome to Recap!</h1>
+<p>Recap is a unified space for users to track, share, and engage with their favorite movies, books, and songs. You can easily upload, log, review, rate, and discover media to create your own personal library!</p>
+
+{% endblock %}
+{% extends "base.html" %}
+
+{% block main_content %}
+    <h1>Welcome {{username}}</h1>
+    <p>Currents:</p>
+    {% for curr in currentsResult %}
+        <li>{{curr['title']}}</li>
+    {% endfor %}
+ 
+    <p>Friends:</p>
+    {% for friend in friendsResult %}
+        <li>{{friend['username']}}</li>
+    {% endfor %}
+ 
+    <p>Reviews:</p>
+    {% for review in reviewsResult %}
+        <li>{{review['title']}} {{review['rating']}}</li>
+        <p>{{review['review_text']}}</p>
+    {% endfor %}
+
+
+{% endblock %}{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Review Media </h1>
+
+<form action="{{ url_for('review') }}" method="post">
+    
+    <label for="title">Title:</label>
+    <input type="text" name="title" id="title" value=""><br><br>
+        
+    <label for="review">Review Text</label>
+    <input type="text" name="review" id="review" value=""><br><br>
+
+    <label for="rating">Rating:</label>
+    <input type="text" name="Rating" id="Rating" value=""><br><br>
+
+    <button type="submit">Review</button>
+</form>
+
+{% endblock %}
+{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Update Media </h1>
+
+<form action="{{ url_for('update_media', media_id=media['media_id']) }}" method="post">
+    
+    <label for="title">Title:</label>
+    <input type="text" name="title" id="title" value="{{ media['title'] }}"><br><br>
+
+    <label for="movie_id">Media ID:</label>
+    <input type="text" id="media_id" value="{{ media['media_id'] }}"><br><br>
+        
+    <label for="media_type">Media Type:</label>
+    <input type="enum" name="media_type" id="media_type" value="{{ media['media_type'] }}"><br><br>
+
+    <label for="director">Director:</label>
+    <input type="text" name="director" id="director" value="{{ media['director'] or '' }}"><br><br>
+
+    <label for="artist">Artist:</label>
+    <input type="text" name="artist" id="artist" value="{{ media['artist'] or '' }}"><br><br>
+
+    <label for="author">Author:</label>
+    <input type="text" name="author" id="author" value="{{ media['author'] or '' }}"><br><br>
+
+    <button type="submit">Update</button>
+</form>
+
+{% endblock %}
+/* the --color-header and others are CSS variables, which we access later. 
+*/
+
+HTML {
+    --color-header: #007ea9;  /* color for H1-H6 and others. was deepskyblue but poor contrast. */
+    --color-hilite: #b50000;  /* was red, but this avoids WAVE contrast errors */ 
+    --color-focus: #56B929;
+    --font-family: Verdana;
+    font-family: var(--font-family)
+}
+
+/* For flashed messages; make them stand out using red and italics */
+
+#messages {
+    color: var(--color-hilite);
+    font-style: italic;
+}
+
+
+h1 {
+    font-size: 200%;
+    color: var(--color-header);
+}
+
+h2, h3 {
+    color: var(--color-header);
+}
+    
+
+/* for a simple navbar. Talk to Scott if you want drop-downs. */
+nav > ul {
+    display: flex;
+    flex-direction: row;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+nav > ul > li {
+    flex: 0 0 auto;
+    width: 15em; 
+}
+
+nav button, nav a {
+    display: block;
+    box-sizing: border-box; /* easier to make button and A the same size */
+    width: 100%;
+    height: 40px;
+    padding: 0px;
+    padding-bottom: 5px;
+    background-color: var(--color-header); /* was #3498db */
+    border: 2px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    /* Firefox uses font -apple-system unless I repeat the font spec here. */
+    font-family: var(--font-family);
+    font-weight: bold;
+    font-size: 1.4rem;
+}
+
+/* Only the top-level buttons are centered; lower ones are left-aligned. */
+nav > ul > li > button , nav > ul > li > a {
+    text-align: center;
+}
+
+/* because of the margin trick, this can only be used for the last element */
+
+nav li.right {
+    margin-left: auto;
+}
+
+nav button:hover, button:focus, nav a:hover, nav a:focus {
+    background-color: var(--color-focus);
+}
+

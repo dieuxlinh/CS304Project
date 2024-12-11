@@ -1,15 +1,13 @@
 {% extends "base.html" %}
 
 {% block main_content %}
+<div class="content-wrapper">
 <h1>Update Media </h1>
 
 <form action="{{ url_for('update_media', media_id=media['media_id']) }}" method="post">
     
     <label for="title">Title:</label>
     <input type="text" name="title" id="title" value="{{ media['title'] }}"><br><br>
-
-    <label for="movie_id">Media ID:</label>
-    <input type="text" id="media_id" value="{{ media['media_id'] }}"><br><br>
         
     <label for="media_type">Media Type:</label>
     <input type="enum" name="media_type" id="media_type" value="{{ media['media_type'] }}"><br><br>
@@ -25,5 +23,5 @@
 
     <button type="submit">Update</button>
 </form>
-
+</div>
 {% endblock %}
