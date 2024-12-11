@@ -295,11 +295,12 @@ def search():
     
     # Request the inputed search term from the form
     search_term = request.args.get("search_media")
+    search_type = request.args.get("search_type")
 
     # if searchterm is not null, redirect the search_result
     # else, re-render the template
     if search_term and search_term != " ":
-        return redirect(url_for("search_result", search_term=search_term))
+        return redirect(url_for("search_result", search_term=search_term, search_type = search_type))
     else:
         flash("Please enter something in the search bar")
         return render_template(
@@ -323,9 +324,12 @@ def search_result(search_term):
     
     #get the search type
     search_type = request.args.get("search_type")
+    print(search_type)
 
     # Query for finding the search_term in the media table
     results = f.search_render(conn, search_term, search_type)
+
+    print(results)
 
     return render_template(
         "display-search.html",
