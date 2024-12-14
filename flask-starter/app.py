@@ -52,7 +52,7 @@ def login():
         try:
             #get user and pass from the form (check both were inputted)
             username = request.form["username"]
-            password = request.form["pass"]
+            password = request.form["password"]
             if username == "":
                 flash("Please enter a username")
             if password == "":
@@ -93,28 +93,50 @@ def uploaded_file(filename):
 def profile(username):
     uid = session.get('uid')
     conn = dbi.connect()
-
-    #Validate session and user
-    response = validate_user_session(conn,uid, username)
-    if response:
-        return response
-
     #select statements to display information about user
     currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session)
+                                                                session.get('uid'))
     if request.method == 'GET':
-       return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+        #Validate session and user
+        response = validate_user_session(conn,uid, username)
+        if response:
+            return response
+        
+        return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
 
     else:
         submit_action = request.form.get('submit')
 
+        #upload profile photo
         if submit_action == 'Upload':
+            #Validate session and user
+            response = validate_user_session(conn,uid, username)
+            if response:
+                return response
             return handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username)
-            
+        
+        #delete profile photo
         elif submit_action == "Delete":
+            #Validate session and user
+            response = validate_user_session(conn,uid, username)
+            if response:
+                return response
             return handle_delete(conn, uid, username, currentsResult, reviewsResult, profilePic)
+        
+        #update currents functionality
         elif submit_action == 'Update':
+            #Validate session and user
+            response = validate_user_session(conn,uid, username)
+            if response:
+                return response
             return handle_update_progress(conn, username)
+        
+        #render friends page functionality
+        elif submit_action == "friend":
+            friend_id = request.form.get('friend_id')
+            currentsResult,reviewsResult,profilePic = f.profile_render(conn,friend_id)
+            return render_profile_page(username, currentsResult, reviewsResult, profilePic, friend_id)
+        
 #logout functionality
 @app.route('/logout/')
 def logout():
@@ -136,7 +158,7 @@ def newAcc():
             # get information from form
             email = request.form["email"]
             username = request.form["username"]
-            password = request.form["pass"]
+            password = request.form["password"]
 
             #check all info is filled out
             if email == "":
@@ -279,7 +301,7 @@ def update_media(media_id):
             f.update_movie(conn, title, media_type, director, artist, author, 
                            media_id)
             flash("Media successfully updated")
-            return redirect(url_for("index"))
+            return redirect(url_for("media", media_id = media_id))
 
         except Exception as err:
             flash(f"Error updating media: {str(err)}")
@@ -475,14 +497,25 @@ def validate_user_session(conn, uid, username):
             return redirect(url_for("index"))
 
 #redners the profile page
-def render_profile_page(conn, username, currentsResult, reviewsResult, profilePic):
+def render_profile_page(username, currentsResult, reviewsResult, profilePic, friend_id):
+    #def render_profile_page(username, currentsResult, reviewsResult, profilePic, friend_id)  
+    # friend id is the same as user_id if it is your profile otherwise if it comes from my friends list button it will be different  
         try:
+            #return render_template('profile.html',
+                                #page_title='Profile',
+                                #username=username, 
+                                #currentsResult=currentsResult, 
+                                #reviewsResult = reviewsResult,
+                                #user_id = session.get("uid"),
+                                #friend_id = friend_id
+                                #profilePic = profilePic)
             return render_template('profile.html',
                                 page_title='Profile',
                                 username=username, 
                                 currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
+                                friend_id = friend_id,
                                 profilePic = profilePic)
         except Exception as e:
             app.logger.error(f"Error displaying profile for {username}: {e}")
@@ -497,7 +530,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                 if 'pfp' not in request.files or fname == '':
                     flash('No selected file')
                     
-                    return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                    return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
             
                 #change file name and create file path
                 pfp = request.files['pfp']
@@ -508,7 +541,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                 if ext not in ['jpg', 'jpeg', 'png']:
                     flash("""Incompatiable File Type. 
                           Please upload a .jpg, .jpeg, or .png file.""")
-                    return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                    return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
 
                 #create pathname for image
                 filename = secure_filename('{}.{}'.format(uid,ext))
@@ -520,8 +553,8 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                 flash('Upload successful')
 
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                                                                session.get('uid'))
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
             
             except Exception as err:
                 flash('Upload failed {why}'.format(why=err))
@@ -537,15 +570,15 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
 def handle_delete(conn, uid, username, currentsResult, reviewsResult, profilePic):
             try:
                 #remove picture
-                f.delete_pic(conn, uid)
+                f.delete_pic(conn, uid, app)
                 flash(f'Profile Picture Deleted')
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                                                                session.get('uid'))
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
 
             except Exception as err:
-                flash(f'Error deleting movie: {err}')
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                flash(f'Error deleting profile picture: {err}')
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic, uid)
 
 #functionality to handle updating the progress of something in currents          
 def handle_update_progress(conn,username):
@@ -558,11 +591,11 @@ def handle_update_progress(conn,username):
                 if result is None:
                     return redirect(url_for("review_finished", media_id=media_id))
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                                                                session.get('uid'))
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic, session.get('uid'))
             except Exception as err:
                 flash(f'Error deleting movie: {err}')
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic, session.get('uid'))
 
 if __name__ == "__main__":
     import sys, os

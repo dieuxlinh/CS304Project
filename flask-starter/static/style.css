@@ -110,7 +110,7 @@ html {
         }
     }
     .content-wrapper {
-        margin: 10px; /* Adds margin for the rest of the content */
+        margin: 10px; 
     }
     .button_header{
         display:flex;
@@ -127,4 +127,13 @@ html {
         align-items: center; 
         gap: 10px;
     }
+    .link-button {
+        background: none;
+        border: none;
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: inherit;
+        font-family: inherit;
+      }
 }
