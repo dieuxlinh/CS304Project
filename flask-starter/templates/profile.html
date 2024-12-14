@@ -1,39 +1,48 @@
 {% extends "base.html" %}
 
 {% block main_content %}
-{% if user_id = %}
+
 <div class="content-wrapper">
+    
     <div class="button_header">
+        {% if user_id == friend_id %}
         <h1>Welcome {{username}}!</h1>
         <form method="get" action="{{ url_for('friends', user_id = user_id) }}">
             <input type="submit" value="My Friends List">
         </form>
+        {% else %}
+        <h1>{{username}}'s profile</h1>
+        {% endif %}
     </div>
 
+
+    
     {% if profilePic['profile_pic'] is not none %}
         <p><img src="{{ url_for('uploaded_file', filename = profilePic['profile_pic']) }}"  style="max-width:50%;" alt="Profile Picture"></p>
     {% else %}
         <p>No Profile Picture</p>
     {% endif %}
-
+    {% if user_id == friend_id %}
     <form method="post" action="{{url_for('profile',username = username )}}" enctype="multipart/form-data">
         <p><label>Picture: <input type="file" name="pfp" value = "Change Profile Picture"></label></p>
         <p><input type="submit" name = "submit" value="Upload">
         <input type="submit"  name = "submit" value="Delete"></p>
     </form>
-
+    {% endif %}
     <h2>Currents:</h2>
     {% for curr in currentsResult %}
     <div class="current-wrapper">
         <li><label for="current">{{curr['title']}} ({{curr['media_type']}})</label>
             <progress id="current" value="{{curr['progress']}}" max="100"></progress>
             <span>{{curr['progress']}}% </span>
+            {% if user_id == friend_id %}
             <form method = "post" action ="{{url_for('profile', username =  username )}}">
                 <input type="hidden" name="current_id" value="{{curr['current_id']}}">
                 <input type="hidden" name="media_id" value="{{curr['media_id']}}">
                 <p><label>Update Currents: <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required></label>
                     <button type="submit" name="submit" value ="Update">Update</button></p>
             </form>
+            {% endif %}
         </li>
 </div>
     {% endfor %}

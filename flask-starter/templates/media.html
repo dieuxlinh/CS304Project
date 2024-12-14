@@ -11,7 +11,7 @@
     </div>
     <p>{{ result.media.title }} is a {{ result.media.media_type }} from {{ person }} 
        with an average rating of 
-       {{ result.media.avg_rating['avg_rating'] if result.media.avg_rating and 'avg_rating' in result.media.avg_rating else 'N/A' }}.
+       {{ 'N/A' if result.media.avg_rating['avg_rating'] == None else  result.media.avg_rating['avg_rating'] | round(2)}}.
     </p>
 
     <h2>Reviews:</h2>
