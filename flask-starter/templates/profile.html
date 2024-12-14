@@ -15,8 +15,6 @@
         {% endif %}
     </div>
 
-
-    
     {% if profilePic['profile_pic'] is not none %}
         <p><img src="{{ url_for('uploaded_file', filename = profilePic['profile_pic']) }}"  style="max-width:50%;" alt="Profile Picture"></p>
     {% else %}
@@ -39,19 +37,20 @@
             <form method = "post" action ="{{url_for('profile', username =  username )}}">
                 <input type="hidden" name="current_id" value="{{curr['current_id']}}">
                 <input type="hidden" name="media_id" value="{{curr['media_id']}}">
-                <p><label>Update Currents: <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required></label>
-                    <button type="submit" name="submit" value ="Update">Update</button></p>
+                <p><label id = "update_label">Update Currents: <input type="number" name="new_progress" min="0" max="100" value="{{ curr['progress'] }}" required></label>
+                    <button type="submit" name="submit" value ="Update" id = "update">Update</button></p>
             </form>
             {% endif %}
         </li>
 </div>
     {% endfor %}
- 
+    
     <h2>Reviews:</h2>
     {% for review in reviewsResult %}
         <li>{{review['title']}} ({{review['media_type']}}): {{review['rating']}}</li>
         <p>{{review['review_text']}}</p>
     {% endfor %}
+    
 
 </div>
 {% endblock %}

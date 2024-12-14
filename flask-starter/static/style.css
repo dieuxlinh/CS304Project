@@ -5,135 +5,181 @@ html {
     --color-background: #f9dfe0; 
     --color-nav-bg: #fdc9c9;
     --color-border: #c62027;
-    --font-family: 'Verdana', sans-serif;
-    font-family: var(--font-family);
     background-color: var(--color-background); 
+    color: #000;
+    --font-family: 'Open Sans', sans-serif; 
+    font-family: var(--font-family);
+    
+  }
+  
+  body {
+    margin: 0;
+    font-size: 16px; 
+    line-height: 1.6;
+  }
+  
+  h1 {
+    font-size: 2.2rem; 
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+  
+  h2 {
+    font-size: 1.8rem;
+    color: var(--color-secondary);
+    margin-bottom: 0.8rem;
+  }
+
+  .content-wrapper {
+    max-width: 960px; 
+    margin: 2rem auto; 
+    padding: 2rem;
+    background-color: #fff; 
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
+  }
+  
+  .current-wrapper,
+  .reviews {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #ddd; 
+    border-radius: 4px;
+    background-color: var(--color-light-bg);
+  }
+  
+  .current-wrapper li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .current-wrapper progress {
+    width: 80px;
+    height: 20px;
+    margin-right: 1rem; 
+  }
+  
+  label {
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  img {
+    display: block;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 50px;
+    align-content: center;
+  }
+
+  nav {
+    margin: 0;
+    background-color: var(--color-nav-bg);
+    border-bottom: 2px solid var(--color-border);
+    padding: 10px 0;
+}
+
+nav > ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+nav ul {
+    padding: 0;
+}
+
+nav > ul > li {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0 10px;
+}
+
+nav button, nav a {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: var(--color-header);
+    color: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-family: var(--font-family);
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+nav > ul > li > button, nav > ul > li > a {
+    text-align: center;
+}
+
+nav li.right {
+    margin-left: auto;
+}
+
+nav button:hover, nav button:focus, nav a:hover, nav a:focus {
+    background-color: var(--color-focus);
     color: #000; 
+    transform: translateY(-2px);
+}
 
-    body {
-        margin: 0;
-        font-family: var(--font-family);
-        line-height: 1.6;
-    }
+.link-button {
+  background: none;
+  border: none;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
 
-    #messages {
-        color: var(--color-hilite);
-        font-style: italic;
-        padding: 10px;
-        border: 1px solid var(--color-border);
-        background-color: rgba(198, 32, 39, 0.1);
-        border-radius: 5px;
-    }
+.button_header{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  width:100%;
+  margin-bottom: 0;
+}
+.button_header h1{
+  margin:0;
+}
 
-    h1 {
-        font-size: 2.5rem;
-        color: var(--color-header);
-        text-transform: uppercase;
-    }
+@media (max-width: 768px) {
+  nav > ul {
+      flex-direction: column;
+      align-items: center;
+  }
 
-    h2, h3 {
-        color: var(--color-header);
-        font-weight: bold;
-    }
+  nav > ul > li {
+      width: 100%;
+  }
 
-    nav {
-        margin: 0;
-        background-color: var(--color-nav-bg);
-        border-bottom: 2px solid var(--color-border);
-        padding: 10px 0;
-    }
-
-    nav > ul {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    nav ul {
-        padding: 0;
-    }
-
-    nav > ul > li {
-        flex: 0 0 auto;
-        width: auto;
-        margin: 0 10px;
-    }
-
-    nav button, nav a {
-        display: block;
-        box-sizing: border-box;
-        width: 100%;
-        padding: 10px 20px;
-        background-color: var(--color-header);
-        color: #fff;
-        border: 2px solid var(--color-border);
-        border-radius: 5px;
-        cursor: pointer;
-        text-align: center;
-        text-decoration: none;
-        font-family: var(--font-family);
-        font-weight: bold;
-        font-size: 1rem;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-    nav > ul > li > button, nav > ul > li > a {
-        text-align: center;
-    }
-
-    nav li.right {
-        margin-left: auto;
-    }
-
-    nav button:hover, nav button:focus, nav a:hover, nav a:focus {
-        background-color: var(--color-focus);
-        color: #000; 
-        transform: translateY(-2px);
-    }
-
-    @media (max-width: 768px) {
-        nav > ul {
-            flex-direction: column;
-            align-items: center;
-        }
-
-        nav > ul > li {
-            width: 100%;
-        }
-
-        nav button, nav a {
-            width: 90%;
-            margin: 5px auto;
-        }
-    }
-    .content-wrapper {
-        margin: 10px; 
-    }
-    .button_header{
-        display:flex;
-        align-items: center;
-        justify-content: space-between;
-        width:100%;
-        margin-bottom: 0;
-    }
-    .button_header h1{
-        margin:0;
-    }
-    .current-wrapper li {
-        display: flex; 
-        align-items: center; 
-        gap: 10px;
-    }
-    .link-button {
-        background: none;
-        border: none;
-        color: blue;
-        text-decoration: underline;
-        cursor: pointer;
-        font-size: inherit;
-        font-family: inherit;
-      }
+  nav button, nav a {
+      width: 90%;
+      margin: 5px auto;
+  }
+  #update{
+    padding: 5px 10px; 
+    font-size: 0.9rem; 
+    height: auto; 
+    width: auto; 
+    border-radius: 5px; 
+    background-color: var(--color-hilite); 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    text-align: center; 
+    margin: 0;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
 }
