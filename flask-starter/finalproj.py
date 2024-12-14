@@ -331,3 +331,23 @@ def check_currents(conn, user_id, media_id):
         return None
     else:
         return True
+
+
+# adding friends
+def add_friend(conn, user_id, friend_user_id):
+    # Check if the user is trying to add themselves as a friend
+    if user_id == friend_user_id:
+        return False, "You cannot add yourself as a friend."
+
+    # Check if they are already friends
+    result = execute_query(conn, """SELECT COUNT(*) FROM friends WHERE (user_id = %s AND friend_id = %s) OR (user_id = %s AND friend_id = %s)""",
+                           (user_id, friend_user_id, friend_user_id, user_id))
+    
+    if result[0][0] > 0:
+        return False, "You are already friends with this user."
+
+    # Otherwise, add the friend (bi-directional relationship)
+    execute_query(conn, """INSERT INTO friends (user_id, friend_id) VALUES (%s, %s), (%s, %s)""",
+                  (user_id, friend_user_id, friend_user_id, user_id))
+
+    return True, "Friend added successfully."
