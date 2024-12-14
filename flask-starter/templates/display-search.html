@@ -8,6 +8,12 @@
         <label for="search">Search for Media:</label>
         <input id="search" type="text" name="search_media" 
         value="{{ search_term | default('') }}">
+        <select id="search" name="search_type">
+            <option value="">select</option>
+                <option value="Movie">Movie</option>
+                <option value="Book">Book</option>
+                <option value="Music">Song</option>
+        </select>
     <button type="submit">Search</button>
 </form>
 
