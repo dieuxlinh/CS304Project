@@ -127,13 +127,4 @@ html {
         align-items: center; 
         gap: 10px;
     }
-    .link-button {
-        background: none;
-        border: none;
-        color: blue;
-        text-decoration: underline;
-        cursor: pointer;
-        font-size: inherit;
-        font-family: inherit;
-      }
 }
