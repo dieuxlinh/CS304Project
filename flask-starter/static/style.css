@@ -110,7 +110,7 @@ html {
         }
     }
     .content-wrapper {
-        margin: 10px; /* Adds margin for the rest of the content */
+        margin: 10px; 
     }
     .button_header{
         display:flex;

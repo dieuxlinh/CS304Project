@@ -18,7 +18,7 @@
             <form method="get" action="{{url_for('review')}}">
                 <input type="hidden" name="media_id" value="{{media.media_id}}">
                 <li><a href = "{{url_for('media', media_id = media.media_id)}}">{{ media.title}} ({{media.media_type}})</a>
-                    <input type="submit" value="review this">
+                    <input type="submit" value="Review This">
                 </li>
             </form>
             {% endfor %}

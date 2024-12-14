@@ -103,7 +103,7 @@ def profile(username):
     currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                 session)
     if request.method == 'GET':
-       return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+       return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
     else:
         submit_action = request.form.get('submit')
@@ -442,7 +442,7 @@ def validate_user_session(conn, uid, username):
             return redirect(url_for("index"))
 
 #redners the profile page
-def render_profile_page(conn, username, currentsResult, reviewsResult, profilePic):
+def render_profile_page(username, currentsResult, reviewsResult, profilePic):
         try:
             return render_template('profile.html',
                                 page_title='Profile',
@@ -450,6 +450,7 @@ def render_profile_page(conn, username, currentsResult, reviewsResult, profilePi
                                 currentsResult=currentsResult, 
                                 reviewsResult = reviewsResult,
                                 user_id = session.get("uid"),
+
                                 profilePic = profilePic)
         except Exception as e:
             app.logger.error(f"Error displaying profile for {username}: {e}")
@@ -464,7 +465,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                 if 'pfp' not in request.files or fname == '':
                     flash('No selected file')
                     
-                    return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                    return render_profile_page(username, currentsResult, reviewsResult, profilePic)
             
                 #change file name and create file path
                 pfp = request.files['pfp']
@@ -475,7 +476,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
                 if ext not in ['jpg', 'jpeg', 'png']:
                     flash("""Incompatiable File Type. 
                           Please upload a .jpg, .jpeg, or .png file.""")
-                    return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                    return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
                 #create pathname for image
                 filename = secure_filename('{}.{}'.format(uid,ext))
@@ -488,7 +489,7 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, username
 
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                 session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic)
             
             except Exception as err:
                 flash('Upload failed {why}'.format(why=err))
@@ -508,11 +509,11 @@ def handle_delete(conn, uid, username, currentsResult, reviewsResult, profilePic
                 flash(f'Profile Picture Deleted')
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                 session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
             except Exception as err:
                 flash(f'Error deleting movie: {err}')
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
 #functionality to handle updating the progress of something in currents          
 def handle_update_progress(conn,username):
@@ -526,10 +527,10 @@ def handle_update_progress(conn,username):
                     return redirect(url_for("review_finished", media_id=media_id))
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                                 session)
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic)
             except Exception as err:
                 flash(f'Error deleting movie: {err}')
-                return render_profile_page(conn, username, currentsResult, reviewsResult, profilePic)
+                return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
 if __name__ == "__main__":
     import sys, os

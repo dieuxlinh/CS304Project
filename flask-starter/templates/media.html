@@ -6,7 +6,7 @@
         <h1>{{ result.media.title }}</h1>
         <form method="get" action="{{ url_for('update_media', media_id=media_id) }}">
             <input type="submit" value="Update Media">
-            <input type="submit" formaction="{{ url_for('currents', media_id=media_id) }}" value="Add to currents">
+            <input type="submit" formaction="{{ url_for('currents', media_id=media_id) }}" value="Add to Currents">
         </form>
     </div>
     <p>{{ result.media.title }} is a {{ result.media.media_type }} from {{ person }} 
