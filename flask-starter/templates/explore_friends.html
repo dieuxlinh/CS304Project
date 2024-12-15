@@ -3,16 +3,13 @@
 {% block main_content %}
 <div class="content-wrapper">
     <h1>Explore Friends</h1>
-    <ul>
-        {% for user in users %}
-            <li>
-                {{ user }}
-                <form action="{{ url_for('add_friend') }}" method="post" style="display:inline;">
-                    <input type="hidden" name="friend_username" value="{{ user }}">
-                    <button type="submit">Add</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
+    {% for friend in explore_friends %}
+    <div>
+        <span>{{ friend.username }}</span>
+        <form action="{{ url_for('add_friend_route', friend_id=friend.user_id) }}" method="POST">
+            <button type="submit">Add</button>
+        </form>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

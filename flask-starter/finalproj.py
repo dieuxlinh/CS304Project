@@ -20,7 +20,6 @@ from flask import (
 )
 import cs304dbi as dbi
 import bcrypt
-import os
 
 # Database connections
 dbi.conf("recap_db")
@@ -53,14 +52,14 @@ def check_pass(stored, password):
 
 
 # Render the user profile, including: current media list, their reviews, and their profile picture if uploaded
-def profile_render(conn, user_id):
+def profile_render(conn, session):
     curs = dbi.dict_cursor(conn)
     #get currents information
     sql = """select media.title, media_type, progress, media.media_id, 
         current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
         """
-    curs.execute(sql, user_id)
+    curs.execute(sql, session["uid"])
     currentsResult = curs.fetchall()
 
     #get reviews information
@@ -68,11 +67,11 @@ def profile_render(conn, user_id):
         reviews.review_text from media inner join reviews using (media_id) 
         where reviews.user_id = %s
         """
-    curs.execute(sql, user_id)
+    curs.execute(sql, session["uid"])
     reviewsResult = curs.fetchall()
 
     sql = """select profile_pic from users where users.user_id = %s """
-    curs.execute(sql, user_id)
+    curs.execute(sql, session["uid"])
     profilePic = curs.fetchone()
 
     return currentsResult, reviewsResult, profilePic
@@ -94,18 +93,8 @@ def insert_pic(conn, profile_pic, user_id):
 
 
 # Delete the user's profile picture
-def delete_pic(conn, user_id, app):
+def delete_pic(conn, user_id):
     curs = dbi.cursor(conn)
-    sql = "select profile_pic from users where user_id = %s"
-    curs.execute(sql, [user_id])
-    filename = curs.fetchone()[0]
-    file_path = os.path.join(app.config['UPLOADS'],filename)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        print(f"File '{filename}' deleted successfully.")
-    else:
-        print(f"File '{filename}' does not exist.")
-    print(filename)
     curs.execute(
         """update users set profile_pic = NULL
                     where user_id = %s""",
@@ -264,10 +253,11 @@ def media_page_render(conn, media_id):
     }
     return result
 
+
 # Render the user's friends list
 def friends_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
-    sql = """select users.username, users.user_id from users inner join friends on 
+    sql = """select users.username from users inner join friends on 
         friends.friend_id = users.user_id where friends.user_id = %s
         """
     curs.execute(sql, [user_id])
@@ -332,22 +322,54 @@ def check_currents(conn, user_id, media_id):
     else:
         return True
 
+# FRIENDS FUNCTIONS
 
-# adding friends
-def add_friend(conn, user_id, friend_user_id):
-    # Check if the user is trying to add themselves as a friend
-    if user_id == friend_user_id:
-        return False, "You cannot add yourself as a friend."
-
-    # Check if they are already friends
-    result = execute_query(conn, """SELECT COUNT(*) FROM friends WHERE (user_id = %s AND friend_id = %s) OR (user_id = %s AND friend_id = %s)""",
-                           (user_id, friend_user_id, friend_user_id, user_id))
+# 1. Render Explore Friends page (shows all users who are not friends with the current user)
+def explore_friends_render(conn, user_id):
+    curs = dbi.dict_cursor(conn)
     
-    if result[0][0] > 0:
-        return False, "You are already friends with this user."
+    sql = """
+        SELECT u.user_id, u.username 
+        FROM users u
+        WHERE u.user_id != %s
+        AND u.user_id NOT IN (
+            SELECT friend_id 
+            FROM friends 
+            WHERE user_id = %s
+        )
+    """
+    curs.execute(sql, (user_id, user_id))
+    explore_friends = curs.fetchall()
+    
+    return explore_friends
 
-    # Otherwise, add the friend (bi-directional relationship)
-    execute_query(conn, """INSERT INTO friends (user_id, friend_id) VALUES (%s, %s), (%s, %s)""",
-                  (user_id, friend_user_id, friend_user_id, user_id))
 
-    return True, "Friend added successfully."
+# 2. Add Friend Function
+def add_friend(conn, user_id, friend_id):
+    curs = dbi.cursor(conn)
+    
+    try:
+        sql = "INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)"
+        curs.execute(sql, (user_id, friend_id))
+        
+        conn.commit()
+        flash("Friend added successfully!")
+    except Exception as err:
+        flash(f"Error adding friend: {repr(err)}")
+        conn.rollback()
+
+
+# 3. Render Friends page (shows all friends of the current user)
+def friends_render(conn, user_id):
+    curs = dbi.dict_cursor(conn)
+    
+    sql = """
+        SELECT u.user_id, u.username
+        FROM users u
+        JOIN friends f ON u.user_id = f.friend_id
+        WHERE f.user_id = %s
+    """
+    curs.execute(sql, [user_id])
+    friends = curs.fetchall()
+    
+    return friends

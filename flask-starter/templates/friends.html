@@ -3,34 +3,14 @@
 {% block main_content %}
 <div class="content-wrapper">
     <h1>My Friends</h1>
-    
-    <!-- your current friends -->
-    <h3>Your Friends:</h3>
-    <ul>
-        {% if friendsResult %}
-            {% for friend in friendsResult %}
-                <li>{{ friend.username }} (ID: {{ friend.user_id }})</li>
-            {% endfor %}
-        {% else %}
-            <p>You haven't added any friends yet. Visit <a href="{{ url_for('explore_friends') }}">Explore Friends</a> to add some!</p>
-        {% endif %}
-    </ul>
-
-    <!--  users not yet friends -->
-    <h3>People You May Know:</h3>
-    <ul>
-        {% if usersNotFriends %}
-            {% for user in usersNotFriends %}
-                <li>
-                    {{ user.username }} (ID: {{ user.user_id }})
-                    <form method="POST" action="{{ url_for('add_friend', friend_user_id=user.user_id) }}">
-                        <button type="submit">Add Friend</button>
-                    </form>
-                </li>
-            {% endfor %}
-        {% else %}
-            <p>There are no new users to add at the moment.</p>
-        {% endif %}
-    </ul>
+    {% if friends %}
+        <ul>
+        {% for friend in friends %}
+            <li>{{ friend.username }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>You don't have any friends yet!</p>
+    {% endif %}
 </div>
 {% endblock %}
