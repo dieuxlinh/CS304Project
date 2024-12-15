@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<div class="content-wrapper">
+    <h1>Explore Friends</h1>
+
+    <div class="friends-grid">
+        {% for user in users %}
+        <div class="friend-profile">
+            <img src="{{ url_for('uploaded_file', filename=user.profile_pic) }}" alt="Profile picture of {{ user.name }}">
+            <p>User ID: {{ user.user_id }}</p>
+            <p>Name: {{ user.name }}</p>
+            <form action="{{ url_for('add_friend', friend_id=user.user_id) }}" method="POST">
+                <button type="submit">Add Friend</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
