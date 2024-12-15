@@ -565,43 +565,6 @@ def handle_update_progress(conn,username):
                 flash(f'Error deleting movie: {err}')
                 return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
-# exploring friends
-@app.route('/explore-friends', methods=['GET', 'POST'])
-def explore_friends():
-    if 'user_id' not in session:
-        flash('Please log in to access this page')
-        return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
-    
-    if request.method == 'POST':
-        # Handle adding a friend
-        friend_id = request.form['friend_id']
-        try:
-            curs.execute('''INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)''', 
-                         [user_id, friend_id])
-            conn.commit()
-            flash('Friend added successfully!')
-        except Exception as e:
-            flash(f'Error adding friend: {e}')
-    
-    # Get all users except the logged-in user and their friends
-    curs.execute('''
-        SELECT user_id, username
-        FROM users
-        WHERE user_id != %s
-          AND user_id NOT IN (
-              SELECT friend_id
-              FROM friends
-              WHERE user_id = %s
-          )
-    ''', [user_id, user_id])
-    all_users = curs.fetchall()
-
-    return render_template('explore_friends.html', all_users=all_users)
-
 if __name__ == "__main__":
     import sys, os
 
