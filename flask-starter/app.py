@@ -602,49 +602,6 @@ def explore_friends():
 
     return render_template('explore_friends.html', all_users=all_users)
 
-# current friends page
-@app.route('/friends')
-def friends():
-    if 'user_id' not in session:
-        flash('Please log in to access this page')
-        return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    conn = dbi.connect()
-    curs = dbi.dict_cursor(conn)
-    
-    # Get the user's friends
-    curs.execute('''
-        SELECT u.user_id, u.username
-        FROM users u
-        INNER JOIN friends f ON u.user_id = f.friend_id
-        WHERE f.user_id = %s
-    ''', [user_id])
-    friends = curs.fetchall()
-
-    return render_template('friends.html', friends=friends)
-
-
-# add friends
-
-@app.route('/add_friend/<int:friend_user_id>', methods=['POST'])
-def add_friend_route(friend_user_id):
-    user_id = session.get('user_id')
-    
-    # Ensure the user is logged in before attempting to add a friend
-    if not user_id:
-        flash("Please log in to add friends.")
-        return redirect(url_for('login'))
-
-    # Call the function to add a friend
-    conn = dbi.connect()
-    success, message = add_friend(conn, user_id, friend_user_id)
-
-    # Display a success or failure message
-    flash(message)
-    return redirect(url_for('profile', user_id=user_id))
-
-
 if __name__ == "__main__":
     import sys, os
 
