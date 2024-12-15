@@ -30,6 +30,9 @@
         <li><a href="{{ url_for('logout') }}">Logout</a></li>
         <li><a href = "{{ url_for('insert_media')}}">Insert Media</a></li>
         <li><a href = "{{ url_for('search')}}">Search</a></li>
+        <li><a href="{{ url_for('explore_friends') }}">Explore Friends</a></li>
+        <li><a href="{{ url_for('friends') }}">Friends</a></li>
+
       </ul>
     </nav>
   {% else %}

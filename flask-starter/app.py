@@ -623,6 +623,26 @@ def friends():
     return render_template('friends.html', friends=friends)
 
 
+# add friends
+
+@app.route('/add_friend/<int:friend_user_id>', methods=['POST'])
+def add_friend_route(friend_user_id):
+    user_id = session.get('user_id')
+    
+    # Ensure the user is logged in before attempting to add a friend
+    if not user_id:
+        flash("Please log in to add friends.")
+        return redirect(url_for('login'))
+
+    # Call the function to add a friend
+    conn = dbi.connect()
+    success, message = add_friend(conn, user_id, friend_user_id)
+
+    # Display a success or failure message
+    flash(message)
+    return redirect(url_for('profile', user_id=user_id))
+
+
 if __name__ == "__main__":
     import sys, os
 
