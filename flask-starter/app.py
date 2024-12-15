@@ -565,7 +565,7 @@ def handle_update_progress(conn,username):
                 flash(f'Error deleting movie: {err}')
                 return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
-# exploring and adding friends
+# exploring friends
 @app.route('/explore-friends', methods=['GET', 'POST'])
 def explore_friends():
     if 'user_id' not in session:
@@ -589,11 +589,13 @@ def explore_friends():
     
     # Get all users except the logged-in user and their friends
     curs.execute('''
-        SELECT u.user_id, u.username
-        FROM users u
-        WHERE u.user_id != %s
-          AND u.user_id NOT IN (
-              SELECT friend_id FROM friends WHERE user_id = %s
+        SELECT user_id, username
+        FROM users
+        WHERE user_id != %s
+          AND user_id NOT IN (
+              SELECT friend_id
+              FROM friends
+              WHERE user_id = %s
           )
     ''', [user_id, user_id])
     all_users = curs.fetchall()
