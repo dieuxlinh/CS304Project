@@ -20,6 +20,7 @@ from flask import (
 )
 import cs304dbi as dbi
 import bcrypt
+import os
 
 # Database connections
 dbi.conf("recap_db")
@@ -52,14 +53,14 @@ def check_pass(stored, password):
 
 
 # Render the user profile, including: current media list, their reviews, and their profile picture if uploaded
-def profile_render(conn, session):
+def profile_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
     #get currents information
     sql = """select media.title, media_type, progress, media.media_id, 
         current_id from currents inner join media using 
         (media_id) where currents.user_id = %s
         """
-    curs.execute(sql, session["uid"])
+    curs.execute(sql, user_id)
     currentsResult = curs.fetchall()
 
     #get reviews information
@@ -67,11 +68,11 @@ def profile_render(conn, session):
         reviews.review_text from media inner join reviews using (media_id) 
         where reviews.user_id = %s
         """
-    curs.execute(sql, session["uid"])
+    curs.execute(sql, user_id)
     reviewsResult = curs.fetchall()
 
     sql = """select profile_pic from users where users.user_id = %s """
-    curs.execute(sql, session["uid"])
+    curs.execute(sql, user_id)
     profilePic = curs.fetchone()
 
     return currentsResult, reviewsResult, profilePic
@@ -93,8 +94,17 @@ def insert_pic(conn, profile_pic, user_id):
 
 
 # Delete the user's profile picture
-def delete_pic(conn, user_id):
+def delete_pic(conn, user_id, app):
     curs = dbi.cursor(conn)
+    sql = "select profile_pic from users where user_id = %s"
+    curs.execute(sql, [user_id])
+    filename = curs.fetchone()[0]
+    file_path = os.path.join(app.config['UPLOADS'],filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"File '{filename}' deleted successfully.")
+    else:
+        print(f"File '{filename}' does not exist.")
     curs.execute(
         """update users set profile_pic = NULL
                     where user_id = %s""",
@@ -257,7 +267,7 @@ def media_page_render(conn, media_id):
 # Render the user's friends list
 def friends_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
-    sql = """select users.username from users inner join friends on 
+    sql = """select users.username, users.user_id from users inner join friends on 
         friends.friend_id = users.user_id where friends.user_id = %s
         """
     curs.execute(sql, [user_id])
