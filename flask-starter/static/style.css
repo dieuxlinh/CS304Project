@@ -94,6 +94,29 @@ html {
         transform: translateY(-2px);
     }
 
+    form button {
+    display: block;
+    width: auto; /* Ensure the button width fits content */
+    padding: 10px 20px;
+    font-size: 1rem; /* Adjust font size */
+    font-weight: bold;
+    background-color: var(--color-header); /* Red background */
+    color: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    form button:hover, form button:focus {
+        background-color: var(--color-focus); /* Hover color */
+        color: #000; 
+        transform: translateY(-2px);
+    }
+
+
     @media (max-width: 768px) {
         nav > ul {
             flex-direction: column;

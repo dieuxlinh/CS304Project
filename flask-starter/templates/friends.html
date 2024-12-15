@@ -4,13 +4,5 @@
 <div class="content-wrapper">
     <h1>My Friends</h1>
 
-    {% for friend in friendsResult %}
-        
-            <form action="{{url_for('profile', username = friend['username'])}}", method = "post">
-                <input type = "hidden" name = "friend_id" value = "friend_id">
-                <li><button type="submit" class="link-button" name = "submit" value = "friend">{{friend['username']}}</button></li>
-            </form>
-    {% endfor %}
-
 </div>
 {% endblock %}

@@ -8,13 +8,12 @@
         {% if user_id == friend_id %}
         <h1>Welcome {{username}}!</h1>
         <form method="get" action="{{ url_for('friends', user_id = user_id) }}">
-            <input type="submit" value="My Friends List">
+            <button type="submit" class="button">My Friends List</button>
         </form>
         {% else %}
         <h1>{{username}}'s profile</h1>
         {% endif %}
     </div>
-
 
     
     {% if profilePic['profile_pic'] is not none %}
