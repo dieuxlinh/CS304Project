@@ -565,6 +565,52 @@ def handle_update_progress(conn,username):
                 flash(f'Error deleting movie: {err}')
                 return render_profile_page(username, currentsResult, reviewsResult, profilePic)
 
+# FRIENDS FUNCTIONS
+# 1. Route for Explore Friends Page
+@app.route('/explore_friends', methods=['GET', 'POST'])
+def explore_friends():
+    if 'uid' not in session:
+        flash("Please log in first!")
+        return redirect(url_for('login'))
+    
+    user_id = session['uid']
+    
+    # Get the list of friends to explore
+    explore_friends_list = explore_friends_render(db_conn, user_id)
+    
+    return render_template('explore_friends.html', explore_friends=explore_friends_list)
+
+
+# 2. Route for Adding a Friend
+@app.route('/add_friend/<int:friend_id>', methods=['POST'])
+def add_friend_route(friend_id):
+    if 'uid' not in session:
+        flash("Please log in first!")
+        return redirect(url_for('login'))
+    
+    user_id = session['uid']
+    
+    # Add the friend to the friends list
+    add_friend(db_conn, user_id, friend_id)
+    
+    return redirect(url_for('explore_friends'))
+
+
+# 3. Route for Friends Page
+@app.route('/friends', methods=['GET'])
+def friends_page():
+    if 'uid' not in session:
+        flash("Please log in first!")
+        return redirect(url_for('login'))
+    
+    user_id = session['uid']
+    
+    # Render the friends list
+    friends_list = friends_render(db_conn, user_id)
+    
+    return render_template('friends.html', friends=friends_list)
+
+
 if __name__ == "__main__":
     import sys, os
 

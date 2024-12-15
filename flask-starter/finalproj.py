@@ -322,3 +322,54 @@ def check_currents(conn, user_id, media_id):
     else:
         return True
 
+# FRIENDS FUNCTIONS
+
+# 1. Render Explore Friends page (shows all users who are not friends with the current user)
+def explore_friends_render(conn, user_id):
+    curs = dbi.dict_cursor(conn)
+    
+    sql = """
+        SELECT u.user_id, u.username 
+        FROM users u
+        WHERE u.user_id != %s
+        AND u.user_id NOT IN (
+            SELECT friend_id 
+            FROM friends 
+            WHERE user_id = %s
+        )
+    """
+    curs.execute(sql, (user_id, user_id))
+    explore_friends = curs.fetchall()
+    
+    return explore_friends
+
+
+# 2. Add Friend Function
+def add_friend(conn, user_id, friend_id):
+    curs = dbi.cursor(conn)
+    
+    try:
+        sql = "INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)"
+        curs.execute(sql, (user_id, friend_id))
+        
+        conn.commit()
+        flash("Friend added successfully!")
+    except Exception as err:
+        flash(f"Error adding friend: {repr(err)}")
+        conn.rollback()
+
+
+# 3. Render Friends page (shows all friends of the current user)
+def friends_render(conn, user_id):
+    curs = dbi.dict_cursor(conn)
+    
+    sql = """
+        SELECT u.user_id, u.username
+        FROM users u
+        JOIN friends f ON u.user_id = f.friend_id
+        WHERE f.user_id = %s
+    """
+    curs.execute(sql, [user_id])
+    friends = curs.fetchall()
+    
+    return friends
