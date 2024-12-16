@@ -357,6 +357,22 @@ def explore_friends_render(conn, user_id):
     
     return explore_friends
 
+# 2. Add Friend Function
+def add_friend(conn, user_id, friend_id):
+    curs = dbi.cursor(conn)
+    
+    try:
+        sql = "INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)"
+        curs.execute(sql, (user_id, friend_id))
+        
+        conn.commit()
+        flash("Friend added successfully!")
+    except Exception as err:
+        flash(f"Error adding friend: {repr(err)}")
+        conn.rollback()
+
+# 3. Render Searched Explore Friends page (shows all users who are not friends
+# with the current user and contain the user's search term)
 def search_users(conn, user_id, search_query):
     curs = dbi.dict_cursor(conn)
 
@@ -376,20 +392,6 @@ def search_users(conn, user_id, search_query):
     result = curs.fetchall()
     
     return result
-
-# 2. Add Friend Function
-def add_friend(conn, user_id, friend_id):
-    curs = dbi.cursor(conn)
-    
-    try:
-        sql = "INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)"
-        curs.execute(sql, (user_id, friend_id))
-        
-        conn.commit()
-        flash("Friend added successfully!")
-    except Exception as err:
-        flash(f"Error adding friend: {repr(err)}")
-        conn.rollback()
 
 
 # 3. Render Friends page (shows all friends of the current user)
