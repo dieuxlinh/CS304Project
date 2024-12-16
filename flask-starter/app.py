@@ -627,7 +627,7 @@ def explore_friends():
 # 2. Route for Adding a Friend
 @app.route('/add_friend/<int:friend_id>', methods=['POST'])
 def add_friend_route(friend_id):
-    conn = dbi.connect()
+    db_conn = dbi.connect()
 
     if 'uid' not in session:
         flash("Please log in first!")
@@ -636,7 +636,7 @@ def add_friend_route(friend_id):
     user_id = session['uid']
     
     # Add the friend to the friends list
-    add_friend(db_conn, user_id, friend_id)
+    f.add_friend(db_conn, user_id, friend_id)
     
     return redirect(url_for('explore_friends'))
 
