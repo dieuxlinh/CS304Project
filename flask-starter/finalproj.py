@@ -52,7 +52,8 @@ def check_pass(stored, password):
         return True
 
 
-# Render the user profile, including: current media list, their reviews, and their profile picture if uploaded
+# Render the user profile, including: current media list, their reviews, 
+# and their profile picture if uploaded
 def profile_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
     #get currents information
@@ -122,7 +123,8 @@ def check_email(conn, email):
     return result
 
 
-# Check if a username is already associated with an account to prevent duplicates
+# Check if a username is already associated with an account to 
+# prevent duplicates
 def check_username(conn, username):
     curs = dbi.dict_cursor(conn)
     sql = "select username from users where username = %s"
@@ -267,9 +269,10 @@ def media_page_render(conn, media_id):
 # Render the user's friends list
 def friends_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
-    sql = """select users.username, users.user_id from users inner join friends on 
-        friends.friend_id = users.user_id where friends.user_id = %s
-        """
+    sql = """select users.username, users.user_id from users inner 
+            join friends on 
+            friends.friend_id = users.user_id where friends.user_id = %s
+            """
     curs.execute(sql, [user_id])
     friendsResult = curs.fetchall()
     return friendsResult
@@ -334,7 +337,8 @@ def check_currents(conn, user_id, media_id):
 
 # FRIENDS FUNCTIONS
 
-# 1. Render Explore Friends page (shows all users who are not friends with the current user)
+# 1. Render Explore Friends page (shows all users who are not friends 
+# with the current user)
 def explore_friends_render(conn, user_id):
     curs = dbi.dict_cursor(conn)
     

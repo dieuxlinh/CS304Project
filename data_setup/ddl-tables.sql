@@ -12,6 +12,7 @@ create table users (
     email varchar(50),
     password_hash varchar(255),
     profile_pic varchar(255),
+    unique(username)
     primary key (user_id)
 );
 
