@@ -1,1 +1,16 @@
-c
+{% extends "base.html" %}
+
+{% block main_content %}
+<div class="content-wrapper">
+<h1>Add to Currents </h1>
+
+<form action="{{ url_for('currents', media_id=media_id) }}" method="post">
+    
+    <h2>{{title.title}}</h2>
+    <label for="progress">Current Progress (0-100):</label>
+    <input type="number" name="progress" id="progress" value="" min = "0" max="100"><br><br>
+
+    <button type="submit">Add to Currents</button>
+</form>
+</div>
+{% endblock %}
