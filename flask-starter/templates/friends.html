@@ -3,6 +3,11 @@
 {% block main_content %}
 <div class="content-wrapper">
     <h1>My Friends</h1>
+    <div class="button_header">
+            <form method="get" action="{{ url_for('explore_friends', user_id = user_id) }}">
+                <button type="submit" class="button">Add Friends</button>
+            </form>
+    </div>
     {% if friendsResult %}
         <ul>
         {% for friend in friendsResult %}

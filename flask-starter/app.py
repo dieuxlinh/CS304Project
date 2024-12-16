@@ -440,7 +440,7 @@ def friends(user_id):
     #query to get user friends data
     friendsResult = f.friends_render(conn, user_id)
     return render_template(
-        "friends.html", page_title="My Friends", friendsResult=friendsResult
+        "friends.html", page_title="My Friends", friendsResult=friendsResult, user_id = user_id
     )
 
 #current media fuctionality
@@ -607,11 +607,20 @@ def explore_friends():
         return redirect(url_for('login'))
     
     user_id = session['uid']
-    
-    # Get the list of friends to explore
-    #SHowing all other user ids
-    explore_friends_list = f.explore_friends_render(db_conn, user_id)
-    
+
+    if request.method == 'GET':
+        # Get the list of friends to explore
+        #SHowing all other user ids
+        explore_friends_list = f.explore_friends_render(db_conn, user_id)
+    else:
+        search_user = request.form.get("search_user","").strip()
+
+        if search_user:
+            explore_friends_list = f.search_users(db_conn, user_id, search_user)
+        else:
+            flash(f'Please enter a search term')
+            explore_friends_list = f.explore_friends_render(db_conn, user_id)
+
     return render_template('explore_friends.html', explore_friends=explore_friends_list)
 
 

@@ -357,6 +357,25 @@ def explore_friends_render(conn, user_id):
     
     return explore_friends
 
+def search_users(conn, user_id, search_query):
+    curs = dbi.dict_cursor(conn)
+
+    sql = """
+        SELECT u.user_id, u.username 
+        FROM users u
+        WHERE u.user_id != %s
+        AND u.user_id NOT IN (
+            SELECT friend_id 
+            FROM friends 
+            WHERE user_id = %s
+        )
+        AND u.username LIKE %s
+    """
+    search_term = f"%{search_query}%"
+    curs.execute(sql, (user_id, user_id, search_term))
+    result = curs.fetchall()
+    
+    return result
 
 # 2. Add Friend Function
 def add_friend(conn, user_id, friend_id):

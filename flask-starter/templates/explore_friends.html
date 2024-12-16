@@ -2,14 +2,23 @@
 
 {% block main_content %}
 <div class="content-wrapper">
-    <h1>Explore Friends</h1>
-    {% for friend in explore_friends %}
-    <div>
-        <span>{{ friend.username }}</span>
-        <form action="{{ url_for('add_friend_route', friend_id=friend.user_id) }}" method="POST">
-            <button type="submit">Add</button>
-        </form>
-    </div>
-    {% endfor %}
+    <h1>Add Friends</h1>
+    <form action="{{(url_for('explore_friends', user_id = user_id)) }}" method="post">
+        <label for="search">Search for Friends:</label>
+        <input id="search" type="text" name="search_user" 
+        value="{{ search_user | default('') }}">
+    <button type="submit">Search</button>
+</form>
+
+    {% if explore_friends %}
+        <ul>
+        {% for user in explore_friends %}
+            <form action="{{url_for('profile', username = user['username'])}}", method = "get">
+                <input type = "hidden" name = "user_id" value = "user_id">
+                <li><button type="submit" class="link-button" name = "submit" value = "user">{{user['username']}}</button></li>
+            </form>
+        {% endfor %}
+        </ul>
+    {% endif %}
 </div>
 {% endblock %}
