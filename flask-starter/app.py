@@ -228,8 +228,7 @@ def insert_media():
         
 
         #checks that user inputted a valid media type
-        check_media_type = media_type != "Book" and media_type != "Movie" 
-        and media_type != "Song"
+        check_media_type = media_type != "Book" and media_type != "Movie" and media_type != "Song"
 
         # check all necessary inputs are filled out
         #else prompt user
@@ -601,6 +600,8 @@ def handle_update_progress(conn,username):
 # 1. Route for Explore Friends Page
 @app.route('/explore_friends', methods=['GET', 'POST'])
 def explore_friends():
+    db_conn = dbi.connect()
+
     if 'uid' not in session:
         flash("Please log in first!")
         return redirect(url_for('login'))
@@ -608,7 +609,8 @@ def explore_friends():
     user_id = session['uid']
     
     # Get the list of friends to explore
-    explore_friends_list = explore_friends_render(db_conn, user_id)
+    #SHowing all other user ids
+    explore_friends_list = f.explore_friends_render(db_conn, user_id)
     
     return render_template('explore_friends.html', explore_friends=explore_friends_list)
 
@@ -616,6 +618,8 @@ def explore_friends():
 # 2. Route for Adding a Friend
 @app.route('/add_friend/<int:friend_id>', methods=['POST'])
 def add_friend_route(friend_id):
+    conn = dbi.connect()
+
     if 'uid' not in session:
         flash("Please log in first!")
         return redirect(url_for('login'))
