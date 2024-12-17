@@ -408,3 +408,12 @@ def friends_render(conn, user_id):
     friends = curs.fetchall()
     
     return friends
+
+def remove_friend(conn,friend_id, user_id):
+    curs = dbi.dict_cursor(conn)
+    
+    sql = """
+        delete from friends where user_id = %s and friend_id = %s 
+        """
+    curs.execute(sql, [user_id, friend_id])
+    conn.commit()

@@ -432,14 +432,15 @@ def media(media_id):
     )
 
 #friends list functionality
-@app.route("/friends/<int:user_id>")
+@app.route("/friends/<int:user_id>", methods=["GET", "POST"])
 def friends(user_id):
     conn = dbi.connect()
-    #query to get user friends data
+    if request.method == "POST":
+        friend_id = request.form["friend_id"]
+        f.remove_friend(conn,friend_id, user_id)
     friendsResult = f.friends_render(conn, user_id)
     return render_template(
-        "friends.html", page_title="My Friends", friendsResult=friendsResult, user_id = user_id
-    )
+        "friends.html", page_title="My Friends", friendsResult=friendsResult, user_id = user_id)
 
 #current media fuctionality
 @app.route("/current/<int:media_id>", methods=["GET", "POST"])

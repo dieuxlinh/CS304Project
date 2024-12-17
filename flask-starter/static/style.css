@@ -153,6 +153,17 @@ nav button:hover, nav button:focus, nav a:hover, nav a:focus {
 .button_header h1{
   margin:0;
 }
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+}
+.inline{
+  margin: 0;
+  display: inline;
+}
 
 @media (max-width: 768px) {
   nav > ul {
