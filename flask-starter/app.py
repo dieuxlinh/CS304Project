@@ -107,7 +107,6 @@ def profile(username):
 
     else:
         submit_action = request.form.get('submit')
-
         if submit_action == 'Upload':
             return handle_upload(conn, uid, currentsResult, reviewsResult, 
                                  profilePic, username)
@@ -123,7 +122,6 @@ def profile(username):
             #get values to render friends profile
             currentsResult,reviewsResult,profilePic = f.profile_render(
                 conn,friend_id)
-            
             #pass the friend id as the "user id" so system knows you are 
             # looking at a friends page
             return render_profile_page(username, currentsResult, reviewsResult, 
@@ -538,13 +536,13 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic,
                 filename = secure_filename('{}.{}'.format(uid,ext))
                 pathname = os.path.join(app.config['UPLOADS'],filename)
                 pfp.save(pathname)
-
                 #add file
                 f.insert_pic(conn, filename, uid)
                 flash('Upload successful')
 
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session)
+                                                                session.get('uid'))
+                
                 return render_profile_page(username, currentsResult, 
                                            reviewsResult, profilePic, uid)
             
