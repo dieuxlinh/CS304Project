@@ -310,7 +310,7 @@ def insert_media():
                 "media_type": "",
                 "director": "",
                 "artist": "",
-                "author": "",
+                "author": ""
             }
             return render_template(
                 "insert.html", media=media, page_title="Insert Media"
@@ -319,7 +319,7 @@ def insert_media():
         try:
             conn = dbi.connect()
             #add media into media table
-            f.insert_media(conn, title, media_type, director, artist, author)
+            f.insert_media(conn, title, media_type, director, artist, author, uid)
             flash("Media successfully inserted")
             return redirect(url_for("index"))
         except Exception as err:

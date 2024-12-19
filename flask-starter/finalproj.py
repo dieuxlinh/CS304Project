@@ -267,10 +267,11 @@ def insert_media(conn, title, media_type, director, artist, author):
     """
     curs = dbi.dict_cursor(conn)
     sql = """
-            INSERT INTO media (title, media_type, director, artist, author)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO media (title, media_type, director, artist, author,
+                addedby)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-    curs.execute(sql, (title, media_type, director, artist, author))
+    curs.execute(sql, (title, media_type, director, artist, author, addedby))
     conn.commit()
 
 
@@ -417,7 +418,7 @@ def media_page_render(conn, media_id):
     reviews = curs.fetchall()
 
     #get media info
-    sql = """select title, media_type, director, artist, author from media 
+    sql = """select title, media_type, director, artist, author, addedby from media 
             where media_id = %s"""
     curs.execute(sql, [media_id])
     media_info = curs.fetchone()
@@ -426,6 +427,10 @@ def media_page_render(conn, media_id):
     curs.execute(sql, [media_id])
     avg_rating = curs.fetchone()
 
+    sql = "select username from users where user_id = %s"
+    curs.execute(sql, media_info['addedby'])
+    username = curs.fetchone()
+
     result = {
         "media": {
             "title": media_info["title"],
@@ -433,6 +438,7 @@ def media_page_render(conn, media_id):
             "director": media_info.get("director"),
             "artist": media_info.get("artist"),
             "author": media_info.get("author"),
+            "addedby": username.get('username'),
             "avg_rating": avg_rating,
         },
         "reviews": reviews,
