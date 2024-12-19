@@ -440,6 +440,7 @@ def media_page_render(conn, media_id):
             "author": media_info.get("author"),
             "addedby": username.get('username'),
             "avg_rating": avg_rating,
+            "addedby_id": media_info.get('addedby')
         },
         "reviews": reviews,
     }

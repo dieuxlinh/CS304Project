@@ -426,7 +426,6 @@ def search_result(search_term):
     """
     conn = dbi.connect()
 
-
     uid = session.get("uid")
 
     if not uid:
@@ -542,6 +541,8 @@ def media(media_id):
         result=result,
         person=person,
         media_id=media_id,
+        user_id = session.get("uid"),
+        addedby_id = result["media"].get("addedby_id")
     )
 
 #friends list functionality

@@ -1,6 +1,6 @@
 use recap_db;
 
-ALTER TABLE media
+/* ALTER TABLE media
 ADD addedby int;
 
 alter table media
@@ -9,3 +9,5 @@ foreign key (addedby)
 references users(user_id)
 on update restrict
 on delete cascade;
+ */
+-- UPDATE media SET addedby = 5 WHERE addedby IS NULL;
