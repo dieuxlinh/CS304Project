@@ -135,7 +135,7 @@ def insert_pic(conn, profile_pic, user_id):
             [user_id, profile_pic, profile_pic],
         )
         conn.commit()
-        print("Picture updated")
+        flash("Picture updated")
     except Exception as err:
         print("Exception on insert of {}: {}".format(user_id, repr(err)))
 
@@ -250,7 +250,7 @@ def add_new_user(conn, username, password, email):
 
 
 # Insert a new media entry into the database
-def insert_media(conn, title, media_type, director, artist, author):
+def insert_media(conn, title, media_type, director, artist, author, addedby):
     """
     Insert a new media entry into the database.
 
@@ -533,18 +533,6 @@ def update_current_progress(conn, new_progress, current_id):
     conn.commit()
     return True
 
-
-# Validate that a user exists with the specified unique user_id
-def validate_user(conn, uid, username):
-    try:
-        cursor = conn.cursor()
-        query = """SELECT COUNT(*) FROM users WHERE user_id = %s 
-                    AND username = %s"""
-        cursor.execute(query, (uid, username))
-        result = cursor.fetchone()
-        return result[0] > 0
-    except Exception as e:
-        raise RuntimeError(f"Error validating user: {e}")
 
 
 # Check if a media item is already in the user's currents list

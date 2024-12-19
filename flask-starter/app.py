@@ -111,6 +111,9 @@ def uploaded_file(filename):
     Returns:
         The requested file from the uploads directory.
     """
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     return send_from_directory(app.config['UPLOADS'], filename)
 
 #route to user profile
@@ -127,16 +130,15 @@ def profile(username):
         Rendered profile page or redirect after handling an action.
     """
     uid = session.get('uid')
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     conn = dbi.connect()
 
     #select statements to display information about user
     currentsResult,reviewsResult,profilePic = f.profile_render(conn,
                                                             session.get('uid'))
     if request.method == 'GET':
-       #Validate session and user
-        response = validate_user_session(conn,uid, username)
-        if response:
-            return response
         return render_profile_page(username, currentsResult, reviewsResult, 
                                    profilePic, uid)
 
@@ -263,8 +265,9 @@ def insert_media():
     """
     uid = session.get("uid")
 
-    if not uid:
-        return redirect(url_for("index"))
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
 
     if request.method == "GET":
         # Pass empty values or defaults to the template
@@ -342,10 +345,9 @@ def update_media(media_id):
         If POST: redirects to the media page or re-renders with errors.
     """
 
-    uid = session.get("uid")
-
-    if not uid:
-        return redirect(url_for("index"))
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     conn = dbi.connect()
     if request.method == "GET":
         # Current media data
@@ -386,10 +388,10 @@ def search():
     Returns:
         If GET: renders the search page with or without search results.
     """
-    uid = session.get("uid")
 
-    if not uid:
-        return redirect(url_for("index"))
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     
     # Request the inputed search term from the form
     search_term = request.args.get("search_media")
@@ -429,16 +431,13 @@ def search_result(search_term):
     uid = session.get("uid")
 
     if not uid:
-        return redirect(url_for("index"))
+        return redirect(url_for("login"))
     
     #get the search type
     search_type = request.args.get("search_type")
-    print(search_type)
 
     # Query for finding the search_term in the media table
     results = f.search_render(conn, search_term, search_type)
-
-    print(results)
 
     return render_template(
         "display-search.html",
@@ -466,7 +465,7 @@ def review():
 
     if not uid:
         flash("Please login")
-        return redirect(url_for("index"))
+        return redirect(url_for("login"))
 
     conn = dbi.connect()
 
@@ -526,6 +525,9 @@ def media(media_id):
         Renders the media page with the details of the specified media.
     """
     conn = dbi.connect()
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
 
     #query to get data for media page
     result = f.media_page_render(conn, media_id)
@@ -558,6 +560,9 @@ def friends(user_id):
     Returns:
         Renders the friends page with the user's friends list.
     """
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     conn = dbi.connect()
     if request.method == "POST":
         friend_id = request.form["friend_id"]
@@ -583,6 +588,9 @@ def currents(media_id):
     """
     conn = dbi.connect()
     uid = session.get("uid")
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     if request.method == "GET":
         #check if media already in current
         #does not allow for duplicate media in current
@@ -616,6 +624,9 @@ def review_finished(media_id):
     Returns:
         Renders the review page for the finished media.
     """
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     conn = dbi.connect()
 
     #query to get media data for review
@@ -627,29 +638,6 @@ def review_finished(media_id):
         media_id=media_id,
     )
 
-#extra security to validate login
-def validate_user_session(conn, uid, username):
-    """
-    Validates if the user is logged in and authorized to access the profile. 
-    If the user is not logged in or is unauthorized, it redirects to 
-    the index page.
-
-    Args:
-        conn: The database connection.
-        uid: The user ID.
-        username: The username of the user.
-
-    Returns:
-        Redirects to the index page if validation fails, otherwise allows 
-        access to the profile.
-    """
-    if not uid:
-        flash("Please log in to access your profile.")
-        return redirect(url_for('index'))
-    #additional security to verify username to backend resources
-    if not f.validate_user(conn, uid, username):
-            flash("Unauthorized access to profile.")
-            return redirect(url_for("index"))
 
 #renders the profile page
 def render_profile_page(username, currentsResult, reviewsResult, profilePic, 
@@ -669,6 +657,9 @@ def render_profile_page(username, currentsResult, reviewsResult, profilePic,
     Returns:
         Renders the profile page with the user's details.
     """
+    if 'uid' not in session:
+        flash('you must be logged in') 
+        return redirect(url_for('login'))
     try:
         return render_template('profile.html',
                                 page_title='Profile',
