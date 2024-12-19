@@ -1,3 +1,9 @@
+"""
+CS304 Final Project
+finalproj.py
+
+Written by: Ariel Moncrief, Linh Dinh, Sophie Thorpe
+"""
 from flask import (
     Flask,
     render_template,
@@ -44,6 +50,16 @@ def index():
 #login route
 @app.route("/login/", methods=["GET", "POST"])
 def login():
+    """
+    Handles user login functionality.
+
+    GET: Renders the login page.
+    POST: Processes login credentials and initiates a user session.
+
+    Returns:
+        - Rendered login page on GET.
+        - Redirect to profile page or re-renders login page with errors on POST.
+    """
     conn = dbi.connect()
 
     if request.method == "GET":
@@ -86,11 +102,30 @@ def login():
 #this needs doesnt seem right but it doesnt work without it
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
+    """
+    Gives uploaded files to the client.
+
+    Args:
+        filename (str): Name of the file to serve.
+
+    Returns:
+        The requested file from the uploads directory.
+    """
     return send_from_directory(app.config['UPLOADS'], filename)
 
 #route to user profile
 @app.route('/profile/<username>', methods=['GET','POST'])
 def profile(username):
+    """
+    Renders the user profile page and handles profile actions like uploading, 
+    deleting, or updating data.
+
+    Args:
+        username (str): The username of the profile to display.
+
+    Returns:
+        Rendered profile page or redirect after handling an action.
+    """
     uid = session.get('uid')
     conn = dbi.connect()
 
@@ -129,6 +164,12 @@ def profile(username):
 #logout functionality
 @app.route('/logout/')
 def logout():
+    """
+    Logs the user out by clearing session data.
+
+    Returns:
+        Redirect to the home page with a logout confirmation message.
+    """
     #remove data from session to log out
     session.pop('username')
     session.pop('uid')
@@ -139,6 +180,17 @@ def logout():
 #create account functionality
 @app.route("/CreateAccount/", methods=["GET", "POST"])
 def newAcc():
+    """
+    Handles user account creation.
+
+    GET: Renders the account creation page.
+    POST: Processes new user data and creates an account.
+
+    Returns:
+        - Rendered account creation page on GET.
+        - Redirect to profile page or re-renders account creation page with 
+        errors on POST.
+    """
     if request.method == "GET":
         return render_template("createAccount.html", 
                                page_title="Create Account")
@@ -199,6 +251,16 @@ def newAcc():
 #insert media functionality
 @app.route("/insert_media/", methods=["GET", "POST"])
 def insert_media():
+    """
+    Handles the insertion of media into the database. If the request method is 
+    GET, it renders an empty form for the user to input media details.
+    If the request method is POST, it validates the form inputs, and if valid, 
+    inserts the media into the database.
+
+    Returns:
+        If GET: renders the insert media form.
+        If POST: redirects to the index page or re-renders the form with errors.
+    """
     uid = session.get("uid")
 
     if not uid:
@@ -267,6 +329,18 @@ def insert_media():
 #updating media functionality
 @app.route("/update_media/<int:media_id>/", methods=["GET", "POST"])
 def update_media(media_id):
+    """
+    Handles updating existing media in the database. If the request method is 
+    GET, it retrieves the current media details and displays them.
+    If the request method is POST, it updates the media with the new values.
+
+    Args:
+        media_id (int): The ID of the media to update.
+
+    Returns:
+        If GET: renders the update media form.
+        If POST: redirects to the media page or re-renders with errors.
+    """
 
     uid = session.get("uid")
 
@@ -304,6 +378,14 @@ def update_media(media_id):
 #search media functionality
 @app.route("/search/", methods=["GET"])
 def search():
+    """
+    Handles searching for media by a search term. If the search term is 
+    provided, it redirects to the search result page.
+    If no term is provided, it prompts the user to enter one.
+
+    Returns:
+        If GET: renders the search page with or without search results.
+    """
     uid = session.get("uid")
 
     if not uid:
@@ -331,6 +413,17 @@ def search():
 #display search functionality
 @app.route("/search/<search_term>", methods=["GET"])
 def search_result(search_term):
+    """
+    Displays the results of the media search based on a search term. 
+    Queries the database for the media matching the search term and 
+    displays the results.
+
+    Args:
+        search_term (str): The search term to query media by.
+
+    Returns:
+        Renders the search result page with the matching media.
+    """
     conn = dbi.connect()
 
 
@@ -360,6 +453,16 @@ def search_result(search_term):
 #write a review functionality
 @app.route("/review/", methods=["GET", "POST"])
 def review():
+    """
+    Handles writing reviews for media. If the request method is GET, it renders 
+    a form to enter a review.
+    If the request method is POST, it validates the review form and adds the 
+    review to the database.
+
+    Returns:
+        If GET: renders the review form.
+        If POST: redirects to the user's profile or re-renders with errors.
+    """
     uid = session.get("uid")
 
     if not uid:
@@ -413,6 +516,16 @@ def review():
 #display media functionality
 @app.route("/media/<int:media_id>")
 def media(media_id):
+    """
+    Displays a media page with details about a specific media item. Queries the 
+    database for the media details using the media ID.
+
+    Args:
+        media_id (int): The ID of the media to display.
+
+    Returns:
+        Renders the media page with the details of the specified media.
+    """
     conn = dbi.connect()
 
     #query to get data for media page
@@ -434,6 +547,16 @@ def media(media_id):
 #friends list functionality
 @app.route("/friends/<int:user_id>", methods=["GET", "POST"])
 def friends(user_id):
+    """
+    Displays a user's friends list. If the request method is POST, it removes a 
+    friend from the user's list.
+    
+    Args:
+        user_id (int): The ID of the user whose friends list to display.
+
+    Returns:
+        Renders the friends page with the user's friends list.
+    """
     conn = dbi.connect()
     if request.method == "POST":
         friend_id = request.form["friend_id"]
@@ -445,6 +568,18 @@ def friends(user_id):
 #current media fuctionality
 @app.route("/current/<int:media_id>", methods=["GET", "POST"])
 def currents(media_id):
+    """
+    Handles adding media to the current media list for a user. If the request 
+    method is GET, it checks if the media is already in the user's current list.
+    If the request method is POST, it updates the user's progress on the media.
+
+    Args:
+        media_id (int): The ID of the media to add or update.
+
+    Returns:
+        If GET: renders the current media form.
+        If POST: redirects to the user's profile or updates the media progress.
+    """
     conn = dbi.connect()
     uid = session.get("uid")
     if request.method == "GET":
@@ -471,6 +606,15 @@ def currents(media_id):
 #when finished media, review media
 @app.route("/review_finished/<int:media_id>")
 def review_finished(media_id):
+    """
+    Displays a review form for media that has been finished by the user.
+
+    Args:
+        media_id (int): The ID of the media to review.
+
+    Returns:
+        Renders the review page for the finished media.
+    """
     conn = dbi.connect()
 
     #query to get media data for review
@@ -484,6 +628,20 @@ def review_finished(media_id):
 
 #extra security to validate login
 def validate_user_session(conn, uid, username):
+    """
+    Validates if the user is logged in and authorized to access the profile. 
+    If the user is not logged in or is unauthorized, it redirects to 
+    the index page.
+
+    Args:
+        conn: The database connection.
+        uid: The user ID.
+        username: The username of the user.
+
+    Returns:
+        Redirects to the index page if validation fails, otherwise allows 
+        access to the profile.
+    """
     if not uid:
         flash("Please log in to access your profile.")
         return redirect(url_for('index'))
@@ -495,8 +653,23 @@ def validate_user_session(conn, uid, username):
 #renders the profile page
 def render_profile_page(username, currentsResult, reviewsResult, profilePic, 
                         friend_id):
-        try:
-            return render_template('profile.html',
+    """
+    Renders the user's profile page with details about their current media, 
+    reviews, and profile picture.
+
+    Args:
+        username (str): The username of the user.
+        currentsResult: The list of the user's current media.
+        reviewsResult: The list of the user's reviews.
+        profilePic: The URL or filename of the user's profile picture.
+        friend_id (int): The ID of the user being viewed or the user 
+        who is logged in.
+
+    Returns:
+        Renders the profile page with the user's details.
+    """
+    try:
+        return render_template('profile.html',
                                 page_title='Profile',
                                 username=username, 
                                 currentsResult=currentsResult, 
@@ -504,15 +677,30 @@ def render_profile_page(username, currentsResult, reviewsResult, profilePic,
                                 user_id = session.get("uid"),
                                 friend_id = friend_id,
                                 profilePic = profilePic)
-        except Exception as e:
-            app.logger.error(f"Error displaying profile for {username}: {e}")
-            flash("An error occurred while loading the profile.")
-            return redirect(url_for("index"))
+    except Exception as e:
+        app.logger.error(f"Error displaying profile for {username}: {e}")
+        flash("An error occurred while loading the profile.")
+        return redirect(url_for("index"))
 
 #functionality to handle profile pic upload
 def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic, 
                   username):
-            try:
+    """
+    Handles the uploading of a new profile picture for the user. Validates 
+    the file type and saves the uploaded file.
+
+    Args:
+        conn: The database connection.
+        uid: The user ID.
+        currentsResult: The list of the user's current media.
+        reviewsResult: The list of the user's reviews.
+        profilePic: The URL or filename of the user's profile picture.
+        username: The username of the user.
+
+    Returns:
+        Renders the profile page after attempting the file upload.
+    """
+    try:
                 #if no file is selected, flash message
                 fname = request.files['pfp'].filename
                 if 'pfp' not in request.files or fname == '':
@@ -542,12 +730,12 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic,
                 flash('Upload successful')
 
                 currentsResult,reviewsResult,profilePic = f.profile_render(conn,
-                                                                session.get('uid'))
+                                                            session.get('uid'))
                 
                 return render_profile_page(username, currentsResult, 
                                            reviewsResult, profilePic, uid)
             
-            except Exception as err:
+    except Exception as err:
                 flash('Upload failed {why}'.format(why=err))
                 return render_template('profile.html',
                                 page_title='Profile',
@@ -560,7 +748,22 @@ def handle_upload(conn, uid, currentsResult, reviewsResult, profilePic,
 #functionality to handle the deleting of a profile pic
 def handle_delete(conn, uid, username, currentsResult, reviewsResult, 
                   profilePic):
-            try:
+    """
+    Handles the deletion of the user's profile picture. Deletes the file and 
+    updates the profile page.
+
+    Args:
+        conn: The database connection.
+        uid: The user ID.
+        username: The username of the user.
+        currentsResult: The list of the user's current media.
+        reviewsResult: The list of the user's reviews.
+        profilePic: The URL or filename of the user's profile picture.
+
+    Returns:
+        Renders the profile page after deleting the profile picture.
+    """
+    try:
                 #remove picture
                 f.delete_pic(conn, uid, app)
                 flash(f'Profile Picture Deleted')
@@ -569,14 +772,27 @@ def handle_delete(conn, uid, username, currentsResult, reviewsResult,
                 return render_profile_page(username, currentsResult, 
                                            reviewsResult, profilePic, uid)
 
-            except Exception as err:
+    except Exception as err:
                 flash(f'Error deleting profle photo: {err}')
                 return render_profile_page(username, currentsResult, 
                                            reviewsResult, profilePic, uid)
 
 #functionality to handle updating the progress of something in currents          
 def handle_update_progress(conn,username):
-            try:
+    """
+    Updates the progress of a media item in the user's "current" list. 
+    If the progress reaches 100%, the user is redirected to review the media.
+
+    Args:
+        conn: The database connection.
+        username: The username of the user.
+
+    Returns:
+        Renders the profile page after updating the progress or 
+        reviewing the media.
+    """
+    
+    try:
                 new_progress = request.form.get("new_progress")
                 current_id = request.form.get("current_id")
                 media_id = request.form.get("media_id")
@@ -584,12 +800,14 @@ def handle_update_progress(conn,username):
                 result = f.update_current_progress(conn, new_progress, 
                                                    current_id)
                 if result is None:
-                    return redirect(url_for("review_finished", media_id=media_id))
+                    return redirect(url_for("review_finished", 
+                                            media_id=media_id))
                 currentsResult,reviewsResult,profilePic = f.profile_render(
                     conn,session.get('uid'))
                 return render_profile_page(username, currentsResult, 
-                                           reviewsResult, profilePic, session.get('uid'))
-            except Exception as err:
+                                           reviewsResult, profilePic, 
+                                           session.get('uid'))
+    except Exception as err:
                 flash(f'Error deleting movie: {err}')
                 return render_profile_page(username, currentsResult, 
                                            reviewsResult, profilePic, 
@@ -599,6 +817,13 @@ def handle_update_progress(conn,username):
 # 1. Route for Explore Friends Page
 @app.route('/explore_friends', methods=['GET', 'POST'])
 def explore_friends():
+    """
+    Displays a page where users can explore other users to potentially add as 
+    friends. Allows users to search for others.
+
+    Returns:
+        Renders the explore friends page with a list of users to explore.
+    """
     db_conn = dbi.connect()
 
     if 'uid' not in session:
@@ -620,12 +845,22 @@ def explore_friends():
             flash(f'Please enter a search term')
             explore_friends_list = f.explore_friends_render(db_conn, user_id)
 
-    return render_template('explore_friends.html', explore_friends=explore_friends_list)
+    return render_template('explore_friends.html', 
+                           explore_friends=explore_friends_list)
 
 
 # 2. Route for Adding a Friend
 @app.route('/add_friend/<int:friend_id>', methods=['POST'])
 def add_friend_route(friend_id):
+    """
+    Adds a friend to the current user's friends list.
+
+    Args:
+        friend_id (int): The ID of the user to add as a friend.
+
+    Returns:
+        Redirects to the explore friends page after adding the friend.
+    """
     db_conn = dbi.connect()
 
     if 'uid' not in session:

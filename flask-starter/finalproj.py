@@ -28,6 +28,19 @@ dbi.conf("recap_db")
 
 # Check if a user exists and their password is correct
 def check_login(conn, username, password):
+    """
+    Check if a user exists in the database and verify their password.
+
+    Args:
+        conn: database connection object
+        username (str): username to verify
+        password (str): password to verify
+
+    Returns:
+        int: The user ID if the username exists and the password is correct.
+        None: If the username does not exist.
+        bool: False if the username exists but the password is incorrect.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select user_id, password_hash from users where username = %s"
     curs.execute(sql, username)
@@ -41,9 +54,17 @@ def check_login(conn, username, password):
         else:
             return False
 
-
-# Verify if the input password matches the stored hash
 def check_pass(stored, password):
+    """
+    Verify if the input password matches the stored passwor
+
+    Args:
+        stored (str): The stored password hash.
+        password (str): The input password to verify.
+
+    Returns:
+        bool: True if the password matches the stored hash, False otherwise.
+    """
     hashed2 = bcrypt.hashpw(password.encode("utf-8"), stored.encode("utf-8"))
     hashed2_str = hashed2.decode("utf-8")
     if hashed2_str != stored:
@@ -55,6 +76,20 @@ def check_pass(stored, password):
 # Render the user profile, including: current media list, their reviews, 
 # and their profile picture if uploaded
 def profile_render(conn, user_id):
+    """
+    Render the user profile, including current media list, their reviews,
+    and their profile picture if uploaded.
+
+    Args:
+        conn: database connection object
+        user_id (int): the users id
+
+    Returns:
+        tuple: A tuple containing:
+            - currentsResult (list): List of the user's current media 
+            - reviewsResult (list): List of the user's reviews
+            - profilePic (dict): Dictionary containing the profile picture URL
+    """
     curs = dbi.dict_cursor(conn)
     #get currents information
     sql = """select media.title, media_type, progress, media.media_id, 
@@ -81,6 +116,17 @@ def profile_render(conn, user_id):
 
 # Insert or update the user's profile picture
 def insert_pic(conn, profile_pic, user_id):
+    """
+    Insert or update the user's profile picture.
+
+    Args:
+        conn: database connection object
+        profile_pic (str): The filename of the profile picture.
+        user_id (int): The users id
+
+    Returns:
+        None
+    """
     curs = dbi.cursor(conn)
     try:
         curs.execute(
@@ -96,6 +142,17 @@ def insert_pic(conn, profile_pic, user_id):
 
 # Delete the user's profile picture
 def delete_pic(conn, user_id, app):
+    """
+    Delete the user's profile picture from the database and file system.
+
+    Args:
+        conn: database connection object
+        user_id (int): users id
+        app: The Flask app object in order to access the upload configuration.
+
+    Returns:
+        None
+    """
     curs = dbi.cursor(conn)
     sql = "select profile_pic from users where user_id = %s"
     curs.execute(sql, [user_id])
@@ -116,6 +173,17 @@ def delete_pic(conn, user_id, app):
 
 # Check if an email is already associated with an account to prevent duplicates
 def check_email(conn, email):
+    """
+    Check if an email is already associated with an account.
+
+    Args:
+        conn: database connection object
+        email (str): the email address to check
+
+    Returns:
+        dict or None: Dictionary containing the email if it exists, 
+        otherwise None.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select email from users where email = %s"
     curs.execute(sql, email)
@@ -126,6 +194,17 @@ def check_email(conn, email):
 # Check if a username is already associated with an account to 
 # prevent duplicates
 def check_username(conn, username):
+    """
+    Check if a username is already associated with an account.
+
+    Args:
+        conn: database connection object
+        username (str): the username to check
+
+    Returns:
+        dict or None: Dictionary containing the username if it exists, 
+        otherwise None.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select username from users where username = %s"
     curs.execute(sql, username)
@@ -135,6 +214,19 @@ def check_username(conn, username):
 
 # Add a new user to the database
 def add_new_user(conn, username, password, email):
+    """
+    Add a new user to the database 
+
+    Args:
+        conn: database connection object
+        username (str): The username for the new user
+        password (str): The plaintext password for the new user
+        email (str): The email address of the new user
+
+    Returns:
+        int or None: The user ID of the newly created user, or None if 
+        insertion fails
+    """
     curs = dbi.dict_cursor(conn)
     # Hash the inputted password and insert user into db
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
@@ -159,6 +251,20 @@ def add_new_user(conn, username, password, email):
 
 # Insert a new media entry into the database
 def insert_media(conn, title, media_type, director, artist, author):
+    """
+    Insert a new media entry into the database.
+
+    Args:
+        conn: database connection object
+        title (str): The title of the media
+        media_type (str): The type of media
+        director (str): The director of the media (if applicable)
+        artist (str): The artist of the media (if applicable)
+        author (str): The author of the media (if applicable)
+
+    Returns:
+        None
+    """
     curs = dbi.dict_cursor(conn)
     sql = """
             INSERT INTO media (title, media_type, director, artist, author)
@@ -170,6 +276,16 @@ def insert_media(conn, title, media_type, director, artist, author):
 
 # Retrieve details of any given media item so it can be updated
 def update_render(conn, media_id):
+    """
+    Get details of a given media item for updating.
+
+    Args:
+        conn: database connection object
+        media_id (int): The media's id
+
+    Returns:
+        dict: Dictionary containing the media details.
+    """
     curs = dbi.dict_cursor(conn)
     sql = """SELECT media_id,title, media_type, director, artist, author 
         FROM media WHERE media_id = %s"""
@@ -180,6 +296,21 @@ def update_render(conn, media_id):
 
 # Update the details/information of an existing media item
 def update_movie(conn, title, media_type, director, artist, author, media_id):
+    """
+    Updates the details of an existing media item.
+
+    Args:
+        conn: database connection object
+        title (str): The updated title of the media.
+        media_type (str): The updated type of media.
+        director (str): The updated director of the media.
+        artist (str): The updated artist of the media.
+        author (str): The updated author of the media.
+        media_id (int): The media id
+
+    Returns:
+        None
+    """
     curs = dbi.dict_cursor(conn)
     sql = """
         UPDATE media
@@ -193,6 +324,17 @@ def update_movie(conn, title, media_type, director, artist, author, media_id):
 
 # Search for a piece of media based on different features
 def search_render(conn, search_term, search_type):
+    """
+    Search for a piece of media based on different features
+
+    Args:
+        conn: database connection object
+        search_term (str): The term to search for
+        search_type (str or None): The media type to filter by 
+
+    Returns:
+        list: List of media matching the search criteria.
+    """
     curs = dbi.dict_cursor(conn)
     search_param = f"%{search_term}%"
     param = [search_param]
@@ -214,6 +356,19 @@ def search_render(conn, search_term, search_type):
 
 # Insert a new review for a media item
 def insert_review(conn, media_id, user_id, review_text, rating):
+    """
+    Insert a new review for media
+
+    Args:
+        conn: database connection object
+        media_id (int): id of media
+        user_id (int): id of user
+        review_text (str): The text of the review.
+        rating (int): The rating for the media
+
+    Returns:
+        None
+    """
     curs = dbi.dict_cursor(conn)
     sql = """
             INSERT INTO reviews (media_id, user_id, review_text, rating) 
@@ -225,6 +380,15 @@ def insert_review(conn, media_id, user_id, review_text, rating):
 
 # Retrieve media title based on the unique media_id
 def review_render(conn, media_id):
+    """
+    Retrieves the media title based on the media id.
+
+    Args:
+        conn: database connection object
+        media_id (int): id of the media
+    Returns:
+        dict: Dictionary containing the media title.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select title from media where media_id = %s"
     curs.execute(sql, [media_id])
@@ -234,6 +398,16 @@ def review_render(conn, media_id):
 
 # Render the media page, including reviews and media details
 def media_page_render(conn, media_id):
+    """
+    Renders the media page, including reviews and media details.
+
+    Args:
+        conn: database connection object
+        media_id (int): id of the media
+
+    Returns:
+        dict: Dictionary containing media details and reviews.
+    """
     curs = dbi.dict_cursor(conn)
     #get reviews
     sql = """select users.username, reviews.review_text, reviews.rating from 
@@ -268,6 +442,16 @@ def media_page_render(conn, media_id):
 
 # Render the user's friends list
 def friends_render(conn, user_id):
+    """
+    Render the user's friends list
+
+    Args:
+        conn: database connection object
+        user_id (int): uer's id
+
+    Returns:
+        list: List of the user's friends.
+    """
     curs = dbi.dict_cursor(conn)
     sql = """select users.username, users.user_id from users inner 
             join friends on 
@@ -280,6 +464,18 @@ def friends_render(conn, user_id):
 
 # Add a piece of media to the user's current progress list
 def add_to_currents(conn, user_id, media_id, progress):
+    """
+    Add a piece of media to the user's current progress list.
+
+    Args:
+        conn: database connection object
+        user_id (int): users id
+        media_id (int): medias id
+        progress (int): The progress percentage of the media
+
+    Returns:
+        None
+    """
     curs = dbi.dict_cursor(conn)
     sql = "insert into currents (user_id, media_id, progress) values (%s,%s,%s)"
     curs.execute(sql, [user_id, media_id, progress])
@@ -288,6 +484,16 @@ def add_to_currents(conn, user_id, media_id, progress):
 
 # Render the form for tracking current media progres
 def render_currents_form(conn, media_id):
+    """
+    Renders the form for tracking current media progress.
+
+    Args:
+        conn: database connection object
+        media_id (int): media's id
+
+    Returns:
+        dict: Dictionary containing the media title.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select title from media where media_id = %s"
     curs.execute(sql, [media_id])
@@ -297,6 +503,17 @@ def render_currents_form(conn, media_id):
 
 # Update the progress of media in the user's current list
 def update_current_progress(conn, new_progress, current_id):
+    """
+    Updates the progress of media in the user's current list.
+
+    Args:
+        conn: database connection object
+        new_progress (int): The updated progress percentage.
+        current_id (int): The unique identifier of the current progress entry.
+
+    Returns:
+        bool or None: True if updated successfully, None if media is completed.
+    """
     curs = dbi.dict_cursor(conn)
     if int(new_progress) == 100:
         flash("Yay you finished it!")
@@ -325,6 +542,18 @@ def validate_user(conn, uid, username):
 
 # Check if a media item is already in the user's currents list
 def check_currents(conn, user_id, media_id):
+    """
+    Check if a media item is already in the user's currents list.
+
+    Args:
+        conn: database connection object
+        user_id (int): user's id
+        media_id (int): the media's id
+
+    Returns:
+        bool or None: True if the media item can be added, None if 
+        already exists.
+    """
     curs = dbi.dict_cursor(conn)
     sql = "select current_id from currents where user_id = %s and media_id = %s"
     curs.execute(sql, [user_id, media_id])
@@ -340,6 +569,17 @@ def check_currents(conn, user_id, media_id):
 # 1. Render Explore Friends page (shows all users who are not friends 
 # with the current user)
 def explore_friends_render(conn, user_id):
+    """
+    Renders the Explore Friends page, showing all users who are not friends 
+    with the current user.
+
+    Args:
+        conn: database connection object
+        user_id (int): user's id
+
+    Returns:
+        list: List of users who are not friends with the current user.
+    """
     curs = dbi.dict_cursor(conn)
     
     sql = """
@@ -359,6 +599,17 @@ def explore_friends_render(conn, user_id):
 
 # 2. Add Friend Function
 def add_friend(conn, user_id, friend_id):
+    """
+    Add a friend to the user's friend list.
+
+    Args:
+        conn: database connection object
+        user_id (int): user's id
+        friend_id (int): friend's id
+
+    Returns:
+        None
+    """
     curs = dbi.cursor(conn)
     
     try:
@@ -374,6 +625,18 @@ def add_friend(conn, user_id, friend_id):
 # 3. Render Searched Explore Friends page (shows all users who are not friends
 # with the current user and contain the user's search term)
 def search_users(conn, user_id, search_query):
+    """
+    Search for users by name in the Explore Friends page.
+
+    Args:
+        conn: database connection object
+        user_id (int): user's id
+        search_query (str): The search query for user names.
+
+    Returns:
+        list: List of users matching the search query who are not friends 
+        with the current user.
+    """
     curs = dbi.dict_cursor(conn)
 
     sql = """
@@ -396,6 +659,21 @@ def search_users(conn, user_id, search_query):
 
 # 3. Render Friends page (shows all friends of the current user)
 def friends_render(conn, user_id):
+    """
+    Render the user's friends list.
+
+    This function retrieves a list of friends for a given user based on 
+    their user ID.
+
+    Args:
+        conn: database connection object
+        user_id (int): user's id
+
+    Returns:
+        list: A list of dictionaries containing user IDs and usernames of 
+        friends.
+    """
+    
     curs = dbi.dict_cursor(conn)
     
     sql = """
@@ -410,6 +688,17 @@ def friends_render(conn, user_id):
     return friends
 
 def remove_friend(conn,friend_id, user_id):
+    """
+    Remove a friend from the user's friend list.
+
+    Args:
+        conn: database connection object
+        friend_id (int): friend's id
+        user_id (int): user's id
+
+    Returns:
+        None
+    """
     curs = dbi.dict_cursor(conn)
     
     sql = """
