@@ -13,6 +13,7 @@
        with an average rating of 
        {{ 'N/A' if result.media.avg_rating['avg_rating'] == None else  result.media.avg_rating['avg_rating'] | round(2)}}.
     </p>
+    <p>Added by: {{ result.media.addedby }} </p>
 
     <h2>Reviews:</h2>
     {% if result.reviews %}
